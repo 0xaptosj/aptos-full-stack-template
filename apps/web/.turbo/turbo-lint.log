@@ -1,0 +1,34 @@
+
+> @repo/web@0.0.1 lint
+> next lint
+
+=============
+
+WARNING: You are currently running a version of TypeScript which is not officially supported by @typescript-eslint/typescript-estree.
+
+You may find that it works just fine, or you may not.
+
+SUPPORTED TYPESCRIPT VERSIONS: >=4.7.4 <5.5.0
+
+YOUR TYPESCRIPT VERSION: 5.5.3
+
+Please only submit bug reports when using the officially supported version.
+
+=============
+
+[36m./src/components/RootHeader.tsx[39m
+[33m7[39m:[33m11[39m  [33m[1mWarning[22m[39m: 'network' is assigned a value but never used.  [90m[1mno-unused-vars[22m[39m
+
+[36m./src/components/providers/AutoConnectProvider.tsx[39m
+[33m16[39m:[33m18[39m  [33m[1mWarning[22m[39m: 'autoConnect' is defined but never used.  [90m[1mno-unused-vars[22m[39m
+
+[36m./src/components/transactionFlows/Sponsor.tsx[39m
+[33m75[39m:[33m9[39m  [33m[1mWarning[22m[39m: 'onSubmitTransaction' is assigned a value but never used.  [90m[1mno-unused-vars[22m[39m
+
+[36m./src/components/ui/use-toast.ts[39m
+[33m129[39m:[33m25[39m  [33m[1mWarning[22m[39m: 'state' is defined but never used.  [90m[1mno-unused-vars[22m[39m
+
+[36m./src/components/wallet/WalletConnection.tsx[39m
+[33m19[39m:[33m19[39m  [33m[1mWarning[22m[39m: 'network' is defined but never used.  [90m[1mno-unused-vars[22m[39m
+
+[36minfo[39m  - Need to disable some ESLint rules? Learn more here: https://nextjs.org/docs/basic-features/eslint#disabling-rules
