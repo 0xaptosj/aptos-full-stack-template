@@ -67,7 +67,7 @@ export function PostMessageWithSurf() {
   });
 
   const onSignAndSubmitTransaction = async (
-    data: z.infer<typeof FormSchema>,
+    data: z.infer<typeof FormSchema>
   ) => {
     if (!account || !walletClient) {
       console.error("Account or wallet client not available");
