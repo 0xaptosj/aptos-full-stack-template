@@ -1,0 +1,19 @@
+{
+  "name": "node-scripts",
+  "version": "0.0.1",
+  "private": true,
+  "scripts": {
+    "exist-message": "ts-node src/scripts/exist_message.ts",
+    "get-message": "ts-node src/scripts/get_message.ts",
+    "post-message": "ts-node src/scripts/post_message.ts"
+  },
+  "dependencies": {
+    "@aptos-labs/ts-sdk": "^1.26.0",
+    "@thalalabs/surf": "^1.7.3",
+    "dotenv": "^16.3.1"
+  },
+  "devDependencies": {
+    "typescript": "^5.3.3",
+    "ts-node": "^10.9.2"
+  }
+}

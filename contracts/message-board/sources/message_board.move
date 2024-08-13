@@ -1,16 +1,18 @@
 module message_board_addr::message_board {
     use std::option::{Self, Option};
-    use std::vector;
     use std::string::String;
+    use std::vector;
 
     use aptos_std::math64;
 
     use aptos_framework::object::{Self, Object, ObjectCore};
 
-    const DEFAULT_START_AFTER: u64 = 0;
-    const DEFAULT_LIMIT: u64 = 10;
+    const MESSAGE_BOARD_OBJECT_SEED: vector<u8> = b"message_board";
 
-    struct Message has key, copy, drop {
+    const DEFAULT_LIMIT: u64 = 10;
+    const DEFAULT_OFFSET: u64 = 0;
+
+    struct Message has key, drop {
         boolean_content: bool,
         string_content: String,
         number_content: u64,
@@ -32,12 +34,13 @@ module message_board_addr::message_board {
     // This function is only called once when the module is published for the first time.
     // init_module is optional, you can also have an entry function as the initializer.
     fun init_module(sender: &signer) {
+        let constructor_ref = &object::create_named_object(sender, MESSAGE_BOARD_OBJECT_SEED);
         move_to(
-            sender,
+            &object::generate_signer(constructor_ref),
             MessageBoard {
-                messages: vector::empty(),
+                messages: vector[],
             },
-        )
+        );
     }
 
     // ======================== Write functions ========================
@@ -57,63 +60,52 @@ module message_board_addr::message_board {
         optional_object_content: Option<Object<ObjectCore>>,
         optional_vector_content: Option<vector<String>>,
     ) acquires MessageBoard {
-        let message_obj_constructor_ref = &object::create_object(@message_board_addr);
-        move_to(&object::generate_signer(message_obj_constructor_ref), Message {
-            boolean_content,
-            string_content,
-            number_content,
-            address_content,
-            object_content,
-            vector_content,
-            optional_boolean_content,
-            optional_string_content,
-            optional_number_content,
-            optional_address_content,
-            optional_object_content,
-            optional_vector_content,
-        });
-        let message_board = borrow_global_mut<MessageBoard>(@message_board_addr);
-        vector::push_back(
-            &mut message_board.messages,
-            object::object_from_constructor_ref(message_obj_constructor_ref)
+        let message_object_constructor_ref = &object::create_object(@message_board_addr);
+
+        move_to(
+            &object::generate_signer(message_object_constructor_ref),
+            Message {
+                boolean_content,
+                string_content,
+                number_content,
+                address_content,
+                object_content,
+                vector_content,
+                optional_boolean_content,
+                optional_string_content,
+                optional_number_content,
+                optional_address_content,
+                optional_object_content,
+                optional_vector_content,
+            },
         );
+
+        let messages =&mut  borrow_global_mut<MessageBoard>(get_message_board_object_address()).messages;
+        vector::push_back(messages, object::object_from_constructor_ref(message_object_constructor_ref));
     }
 
     // ======================== Read Functions ========================
 
     #[view]
-    public fun get_messages(
-        start_after: Option<u64>,
-        limit: Option<u64>
-    ): vector<Object<Message>> acquires MessageBoard {
-        let messages = borrow_global<MessageBoard>(@message_board_addr).messages;
-        let results = vector[];
-        let start_idx = if (option::is_some(&start_after)) {
-            *option::borrow(&start_after) + 1
-        } else {
-            DEFAULT_START_AFTER
+    /// Get message objects, old messages come first
+    public fun get_message_objects(limit: Option<u64>, offset: Option<u64>): vector<Object<Message>> acquires MessageBoard {
+        let messages = borrow_global<MessageBoard>(get_message_board_object_address()).messages;
+
+        let limit = *option::borrow_with_default(&limit, &DEFAULT_LIMIT);
+        let offset = *option::borrow_with_default(&offset, &DEFAULT_OFFSET);
+
+        let message_objects = vector[];
+        for (i in offset..math64::min(vector::length(&messages), offset + limit)) {
+            vector::push_back(&mut message_objects, *vector::borrow(&messages, i));
         };
-        let end_idx = math64::min(
-            vector::length(&messages),
-            start_idx + *option::borrow_with_default(&limit, &DEFAULT_LIMIT)
-        );
-        for (i in start_idx..end_idx) {
-            let message_obj = *vector::borrow(&messages, i);
-            vector::push_back(&mut results, message_obj);
-        };
-        results
+
+        message_objects
     }
 
     #[view]
-    public fun get_message_struct(
-        message_obj: Object<Message>
-    ): Message acquires Message {
-        let message = borrow_global<Message>(object::object_address(&message_obj));
-        *message
-    }
-
-    #[view]
-    public fun get_message_content(message_obj: Object<Message>): (
+    /// Get the content of a message
+    public fun get_message_content(message_object: Object<Message>)
+        : (
         bool,
         String,
         u64,
@@ -127,7 +119,7 @@ module message_board_addr::message_board {
         Option<Object<ObjectCore>>,
         Option<vector<String>>,
     ) acquires Message {
-        let message = borrow_global<Message>(object::object_address(&message_obj));
+        let message = borrow_global<Message>(object::object_address(&message_object));
         (
             message.boolean_content,
             message.string_content,
@@ -144,81 +136,18 @@ module message_board_addr::message_board {
         )
     }
 
-    // ======================== Unit Tests ========================
+    // ======================== Helper functions ========================
+
+    fun get_message_board_object_address(): address {
+        object::create_object_address(&@message_board_addr, MESSAGE_BOARD_OBJECT_SEED)
+    }
+
+    // ================================= Uint Tests Helper ================================== //
 
     #[test_only]
-    use std::string;
-    #[test_only]
-    use std::signer;
-
-    #[test(sender = @message_board_addr)]
-    fun test_end_to_end<>(sender: &signer) acquires MessageBoard, Message {
-        let sende_addr = signer::address_of(sender);
-
+    public fun init_module_for_test(
+        sender: &signer
+    ) {
         init_module(sender);
-
-        let obj_constructor_ref = &object::create_object(sende_addr);
-        let obj = object::object_from_constructor_ref<ObjectCore>(obj_constructor_ref);
-
-        post_message(
-            sender,
-            true,
-            string::utf8(b"hello world"),
-            42,
-            @0x1,
-            obj,
-            vector[string::utf8(b"hello")],
-            option::some(true),
-            option::some(string::utf8(b"hello")),
-            option::some(42),
-            option::some(@0x1),
-            option::some(obj),
-            option::some(vector[string::utf8(b"hello")]),
-        );
-
-        let messages = get_messages(option::none(), option::none());
-        let message = *vector::borrow(&messages, 0);
-        let message_struct = &get_message_struct(message);
-        assert!(message_struct == &Message{
-            boolean_content: true,
-            string_content: string::utf8(b"hello world"),
-            number_content: 42,
-            address_content: @0x1,
-            object_content: obj,
-            vector_content: vector[string::utf8(b"hello")],
-            optional_boolean_content: option::some(true),
-            optional_string_content: option::some(string::utf8(b"hello")),
-            optional_number_content: option::some(42),
-            optional_address_content: option::some(@0x1),
-            optional_object_content: option::some(obj),
-            optional_vector_content: option::some(vector[string::utf8(b"hello")]),
-        }, 1);
-
-        let (
-            boolean_content,
-            string_content,
-            number_content,
-            address_content,
-            object_content,
-            vector_content,
-            optional_boolean_content,
-            optional_string_content,
-            optional_number_content,
-            optional_address_content,
-            optional_object_content,
-            optional_vector_content,
-        ) = get_message_content(message);
-        assert!(boolean_content == true, 2);
-        assert!(string_content == string::utf8(b"hello world"), 3);
-        assert!(number_content == 42, 4);
-        assert!(address_content == @0x1, 5);
-        assert!(object_content == obj, 6);
-        assert!(vector_content == vector[string::utf8(b"hello")], 7);
-        assert!(optional_boolean_content == option::some(true), 8);
-        assert!(optional_string_content == option::some(string::utf8(b"hello")), 9);
-        assert!(optional_number_content == option::some(42), 10);
-        assert!(optional_address_content == option::some(@0x1), 11);
-        assert!(optional_object_content == option::some(obj), 12);
-        assert!(optional_vector_content == option::some(vector[string::utf8(b"hello")]), 13);
     }
 }
