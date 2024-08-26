@@ -34,7 +34,7 @@ module message_board_addr::message_board {
     // ======================== Write functions ========================
 
     /// Create a new message
-    public entry fun craete_message(sender: &signer, content: String) {
+    public entry fun create_message(sender: &signer, content: String) {
         let message_obj_constructor_ref = &object::create_object(@message_board_addr);
         let message_obj_signer = &object::generate_signer(message_obj_constructor_ref);
         let message = Message {
@@ -84,12 +84,12 @@ module message_board_addr::message_board {
     }
 
     #[test_only]
-    public fun get_message_obj_from_create_message_event<T: drop + store>(event: T): Object<Message> {
-        (event as CreateMessageEvent).message_obj
+    public fun get_message_obj_from_create_message_event(event: &CreateMessageEvent): Object<Message> {
+        event.message_obj
     }
 
     #[test_only]
-    public fun get_message_obj_from_update_message_event<T: drop + store>(event: T): Object<Message> {
-        (event as UpdateMessageEvent).message_obj
+    public fun get_message_obj_from_update_message_event(event: &UpdateMessageEvent): Object<Message> {
+        event.message_obj
     }
 }

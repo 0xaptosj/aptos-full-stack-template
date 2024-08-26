@@ -7,7 +7,7 @@ script {
     // Move script is how we batch multiple function calls in 1 tx
     // Similar to Solana allows multiple instructions in 1 tx
     fun create_2_messages(sender: &signer) {
-        message_board::craete_message(sender, string::utf8(b"hello world"));
-        message_board::craete_message(sender, string::utf8(b"hello aptos"));
+        message_board::create_message(sender, string::utf8(b"hello world"));
+        message_board::create_message(sender, string::utf8(b"hello aptos"));
     }
 }
