@@ -82,4 +82,14 @@ module message_board_addr::message_board {
         init_module(sender);
         timestamp::set_time_has_started_for_testing(aptos_framework);
     }
+
+    #[test_only]
+    public fun get_message_obj_from_create_message_event<T: drop + store>(event: T): Object<Message> {
+        (event as CreateMessageEvent).message_obj
+    }
+
+    #[test_only]
+    public fun get_message_obj_from_update_message_event<T: drop + store>(event: T): Object<Message> {
+        (event as UpdateMessageEvent).message_obj
+    }
 }
