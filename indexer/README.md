@@ -18,10 +18,19 @@ Create the DB.
 psql postgres://username@127.0.0.1:5432/postgres -c 'CREATE DATABASE "example-indexer"'
 ```
 
+Create a new table, run the migration, regenerate the schema.
+
+```sh
+# in /indexer/src/db/postgres
+diesel migration generate create-abc-table
+diesel migration run --database-url="postgresql://username:@localhost:5432/example-indexer"
+diesel print-schema > schema.rs --database-url="postgresql://username:@localhost:5432/example-indexer"
+```
+
 With the `config.yaml` you created earlier, you’re ready to run the events processor:
 
 ```sh
-# in the indexer directory
+# in /indexer
 cargo run --release -- -c config.yaml
 ```
 

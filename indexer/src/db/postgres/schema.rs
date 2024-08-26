@@ -25,6 +25,18 @@ diesel::table! {
 }
 
 diesel::table! {
+    messages (id) {
+        id -> Int8,
+        #[max_length = 300]
+        message_obj_addr -> Varchar,
+        #[max_length = 300]
+        creator_addr -> Varchar,
+        creation_timestamp -> Int8,
+        content -> Text,
+    }
+}
+
+diesel::table! {
     processor_status (processor) {
         #[max_length = 50]
         processor -> Varchar,
@@ -34,4 +46,9 @@ diesel::table! {
     }
 }
 
-diesel::allow_tables_to_appear_in_same_query!(events, ledger_infos, processor_status,);
+diesel::allow_tables_to_appear_in_same_query!(
+    events,
+    ledger_infos,
+    messages,
+    processor_status,
+);
