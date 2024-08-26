@@ -13,7 +13,16 @@ use tracing::warn;
 /// EventsExtractor is a step that extracts events and their metadata from transactions.
 pub struct EventsExtractor
 where
-    Self: Sized + Send + 'static, {}
+    Self: Sized + Send + 'static,
+{
+    contract_address: String,
+}
+
+impl EventsExtractor {
+    pub fn new(contract_address: String) -> Self {
+        Self { contract_address }
+    }
+}
 
 #[async_trait]
 impl Processable for EventsExtractor {
@@ -50,7 +59,12 @@ impl Processable for EventsExtractor {
                     _ => &default,
                 };
 
-                let txn_events = EventModel::from_events(raw_events, txn_version, block_height);
+                let txn_events = EventModel::from_events(
+                    self.contract_address.as_str(),
+                    raw_events,
+                    txn_version,
+                    block_height,
+                );
                 events.extend(txn_events);
                 events
             })

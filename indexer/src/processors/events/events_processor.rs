@@ -54,7 +54,7 @@ impl EventsProcessor {
             ..self.config.transaction_stream_config
         })
         .await?;
-        let events_extractor = EventsExtractor {};
+        let events_extractor = EventsExtractor::new(self.config.contract_config.contract_address);
         let events_storer = EventsStorer::new(self.db_pool.clone());
         let version_tracker = LatestVersionProcessedTracker::new(
             self.config.db_config,

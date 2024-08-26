@@ -24,7 +24,6 @@ Create a new table, run the migration, regenerate the schema.
 # in /indexer/src/db/postgres
 diesel migration generate create-abc-table
 diesel migration run --database-url="postgresql://username:@localhost:5432/example-indexer"
-diesel print-schema > schema.rs --database-url="postgresql://username:@localhost:5432/example-indexer"
 ```
 
 With the `config.yaml` you created earlier, you’re ready to run the events processor:

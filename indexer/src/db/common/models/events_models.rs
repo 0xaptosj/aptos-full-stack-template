@@ -32,28 +32,36 @@ pub struct Event {
 
 impl Event {
     pub fn from_event(
+        contract_address: &str,
         event: &EventPB,
         transaction_version: i64,
         transaction_block_height: i64,
         event_index: i64,
-    ) -> Self {
+    ) -> Option<Self> {
         let t: &str = event.type_str.as_ref();
-        Event {
-            account_address: standardize_address(
-                event.key.as_ref().unwrap().account_address.as_str(),
-            ),
-            creation_number: event.key.as_ref().unwrap().creation_number as i64,
-            sequence_number: event.sequence_number as i64,
-            transaction_version,
-            transaction_block_height,
-            type_: t.to_string(),
-            data: serde_json::from_str(event.data.as_str()).unwrap(),
-            event_index,
-            indexed_type: truncate_str(t, EVENT_TYPE_MAX_LENGTH),
+        let should_include = t.starts_with(contract_address);
+
+        if should_include {
+            Some(Event {
+                account_address: standardize_address(
+                    event.key.as_ref().unwrap().account_address.as_str(),
+                ),
+                creation_number: event.key.as_ref().unwrap().creation_number as i64,
+                sequence_number: event.sequence_number as i64,
+                transaction_version,
+                transaction_block_height,
+                type_: t.to_string(),
+                data: serde_json::from_str(event.data.as_str()).unwrap(),
+                event_index,
+                indexed_type: truncate_str(t, EVENT_TYPE_MAX_LENGTH),
+            })
+        } else {
+            None
         }
     }
 
     pub fn from_events(
+        contract_address: &str,
         events: &[EventPB],
         transaction_version: i64,
         transaction_block_height: i64,
@@ -63,13 +71,15 @@ impl Event {
             .enumerate()
             .map(|(index, event)| {
                 Self::from_event(
+                    contract_address,
                     event,
                     transaction_version,
                     transaction_block_height,
                     index as i64,
                 )
             })
-            .collect::<Vec<EventModel>>()
+            .filter_map(|event| event)
+            .collect()
     }
 }
 
