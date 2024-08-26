@@ -6,6 +6,9 @@ module message_board_addr::message_board {
     use aptos_framework::object::{Self, Object};
     use aptos_framework::timestamp;
 
+    /// Only the message creator can update the message content
+    const ERR_ONLY_MESSAGE_CREATOR_CAN_UPDATE: u64 = 1;
+
     struct Message has copy, drop, key, store {
         creator: address,
         creation_timestamp: u64,
@@ -13,7 +16,13 @@ module message_board_addr::message_board {
     }
 
     #[event]
-    struct PostMessageEvent has drop, store {
+    struct CreateMessageEvent has drop, store {
+        message_obj: Object<Message>,
+        message: Message,
+    }
+
+    #[event]
+    struct UpdateMessageEvent has drop, store {
         message_obj: Object<Message>,
         message: Message,
     }
@@ -24,8 +33,8 @@ module message_board_addr::message_board {
 
     // ======================== Write functions ========================
 
-    /// Post a message
-    public entry fun post_message(sender: &signer, content: String) {
+    /// Create a new message
+    public entry fun craete_message(sender: &signer, content: String) {
         let message_obj_constructor_ref = &object::create_object(@message_board_addr);
         let message_obj_signer = &object::generate_signer(message_obj_constructor_ref);
         let message = Message {
@@ -35,9 +44,21 @@ module message_board_addr::message_board {
         };
         move_to(message_obj_signer, message);
 
-        event::emit(PostMessageEvent {
+        event::emit(CreateMessageEvent {
             message_obj: object::object_from_constructor_ref(message_obj_constructor_ref),
             message,
+        });
+    }
+
+    /// Update the content of an existing message, only message creator can call
+    public entry fun update_message(sender: &signer, message_obj: Object<Message>, new_content: String) acquires Message {
+        let message = borrow_global_mut<Message>(object::object_address(&message_obj));
+        assert!(message.creator == signer::address_of(sender), ERR_ONLY_MESSAGE_CREATOR_CAN_UPDATE);
+        message.content = new_content;
+
+        event::emit(UpdateMessageEvent {
+            message_obj,
+            message: *message,
         });
     }
 
@@ -45,8 +66,8 @@ module message_board_addr::message_board {
 
     #[view]
     /// Get the content of a message
-    public fun get_message_content(message_object: Object<Message>): (String, address, u64) acquires Message {
-        let message = borrow_global<Message>(object::object_address(&message_object));
+    public fun get_message_content(message_obj: Object<Message>): (String, address, u64) acquires Message {
+        let message = borrow_global<Message>(object::object_address(&message_obj));
         (
             message.content,
             message.creator,

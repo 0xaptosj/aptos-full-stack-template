@@ -8,9 +8,6 @@ module message_board_addr::test_end_to_end {
     fun test_end_to_end(aptos_framework: &signer, sender: &signer) {
         message_board::init_module_for_test(aptos_framework, sender);
 
-        message_board::post_message(
-            sender,
-            string::utf8(b"hello world"),
-        );
+        message_board::craete_message(sender, string::utf8(b"hello world"));
     }
 }
