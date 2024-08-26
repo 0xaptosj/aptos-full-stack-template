@@ -26,7 +26,7 @@ impl RunnableConfig for IndexerProcessorConfig {
             ProcessorConfig::EventsProcessor => {
                 let events_processor = EventsProcessor::new(self.clone()).await?;
                 events_processor.run_processor().await
-            },
+            }
         }
     }
 

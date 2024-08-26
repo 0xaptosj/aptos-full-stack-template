@@ -21,7 +21,7 @@ pub async fn check_or_update_chain_id(grpc_chain_id: i64, db_pool: ArcDbPool) ->
                 "Chain id matches! Continue to index...",
             );
             Ok(chain_id as u64)
-        },
+        }
         None => {
             info!(
                 chain_id = grpc_chain_id,
@@ -39,6 +39,6 @@ pub async fn check_or_update_chain_id(grpc_chain_id: i64, db_pool: ArcDbPool) ->
             .await
             .context("Error updating chain_id!")
             .map(|_| grpc_chain_id as u64)
-        },
+        }
     }
 }

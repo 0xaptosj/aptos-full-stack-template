@@ -4,7 +4,7 @@ use crate::{
     config::indexer_processor_config::IndexerProcessorConfig,
     utils::{
         chain_id::check_or_update_chain_id,
-        database::{new_db_pool, run_migrations, ArcDbPool},
+        database::{new_db_pool, ArcDbPool},
         starting_version::get_starting_version,
     },
 };
@@ -38,13 +38,6 @@ impl EventsProcessor {
     }
 
     pub async fn run_processor(self) -> Result<()> {
-        // Run migrations
-        run_migrations(
-            self.config.db_config.postgres_connection_string.clone(),
-            self.db_pool.clone(),
-        )
-        .await;
-
         // Merge the starting version from config and the latest processed version from the DB
         let starting_version = get_starting_version(&self.config, self.db_pool.clone()).await?;
 

@@ -17,10 +17,10 @@ use diesel_async::{
     },
     AsyncPgConnection, RunQueryDsl,
 };
-use diesel_migrations::{embed_migrations, EmbeddedMigrations, MigrationHarness};
+use diesel_migrations::{embed_migrations, EmbeddedMigrations};
 use futures_util::{future::BoxFuture, FutureExt};
 use std::sync::Arc;
-use tracing::{debug, info, warn};
+use tracing::{debug, warn};
 
 pub type Backend = diesel::pg::Pg;
 
@@ -258,33 +258,6 @@ where
         }
     }
     Ok(())
-}
-
-pub fn run_pending_migrations<DB: diesel::backend::Backend>(conn: &mut impl MigrationHarness<DB>) {
-    conn.run_pending_migrations(MIGRATIONS)
-        .expect("[Parser] Migrations failed!");
-}
-
-pub async fn run_migrations(postgres_connection_string: String, conn_pool: ArcDbPool) {
-    use diesel_async::async_connection_wrapper::AsyncConnectionWrapper;
-
-    info!("Running migrations: {:?}", postgres_connection_string);
-    let conn = conn_pool
-        // We need to use this since AsyncConnectionWrapper doesn't know how to
-        // work with a pooled connection.
-        .dedicated_connection()
-        .await
-        .expect("[Parser] Failed to get connection");
-    // We use spawn_blocking since run_pending_migrations is a blocking function.
-    tokio::task::spawn_blocking(move || {
-        // This lets us use the connection like a normal diesel connection. See more:
-        // https://docs.rs/diesel-async/latest/diesel_async/async_connection_wrapper/type.AsyncConnectionWrapper.html
-        let mut conn: AsyncConnectionWrapper<diesel_async::AsyncPgConnection> =
-            AsyncConnectionWrapper::from(conn);
-        run_pending_migrations(&mut conn);
-    })
-    .await
-    .expect("[Parser] Failed to run migrations");
 }
 
 /// Section below is required to modify the query.
