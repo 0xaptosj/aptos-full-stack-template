@@ -103,7 +103,7 @@ impl Processable for EventsStorer {
         events: TransactionContext<ContractEvent>,
     ) -> Result<Option<TransactionContext<ContractEvent>>, ProcessorError> {
         let per_table_chunk_sizes: AHashMap<String, usize> = AHashMap::new();
-        let (create_events, update_events) = events.data.into_iter().fold(
+        let (create_events, update_events) = events.clone().data.into_iter().fold(
             (vec![], vec![]),
             |(mut create_events, mut update_events), event| {
                 match event {

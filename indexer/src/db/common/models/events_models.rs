@@ -17,12 +17,14 @@ pub struct MoveObj {
 }
 
 #[derive(Clone, Debug, Deserialize, Serialize)]
+/// On-chain representation of a message
 pub struct MessageOnChain {
     pub creator: String,
     pub content: String,
 }
 
 #[derive(Clone, Debug, Deserialize, Serialize)]
+/// On-chain representation of a message creation event
 pub struct CreateMessageEventOnChain {
     pub message_obj: MoveObj,
     pub message: MessageOnChain,
@@ -30,6 +32,7 @@ pub struct CreateMessageEventOnChain {
 }
 
 #[derive(Clone, Debug, Deserialize, Serialize)]
+/// On-chain representation of a message update event
 pub struct UpdateMessageEventOnChain {
     pub message_obj: MoveObj,
     pub message: MessageOnChain,
@@ -67,6 +70,7 @@ pub struct UpdateMessageEvent {
     pub content: String,
 }
 
+#[derive(Clone)]
 pub enum ContractEvent {
     CreateMessageEvent(CreateMessageEvent),
     UpdateMessageEvent(UpdateMessageEvent),
