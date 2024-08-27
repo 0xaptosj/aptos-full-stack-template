@@ -50,6 +50,7 @@ pub struct Message {
     pub content: String,
 }
 
+#[derive(Clone, Debug, Deserialize, FieldCount, Serialize)]
 pub struct CreateMessageEvent {
     pub message_obj_addr: String,
     pub creator_addr: String,
@@ -58,6 +59,7 @@ pub struct CreateMessageEvent {
     pub content: String,
 }
 
+#[derive(Clone, Debug, Deserialize, FieldCount, Serialize)]
 pub struct UpdateMessageEvent {
     pub message_obj_addr: String,
     pub update_timestamp: i64,

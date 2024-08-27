@@ -1,6 +1,8 @@
 use crate::{
-    db::common::models::events_models::{ContractEvent, CreateMessageEvent, UpdateMessageEvent},
-    schema,
+    db::common::models::events_models::{
+        ContractEvent, CreateMessageEvent, Message, UpdateMessageEvent,
+    },
+    schema::{self},
     utils::database::{execute_in_chunks, get_config_table_chunk_size, ArcDbPool},
 };
 use ahash::AHashMap;
@@ -33,21 +35,13 @@ impl EventsStorer {
 }
 
 fn create_message_events_query(
-    items_to_insert: Vec<ContractEvent>,
+    items_to_insert: Vec<CreateMessageEvent>,
 ) -> (
     impl QueryFragment<Pg> + diesel::query_builder::QueryId + Send,
     Option<&'static str>,
 ) {
-    use schema::events::dsl::*;
+    use schema::messages::dsl::*;
     (
-        // diesel::insert_into(schema::messages::table)
-        //     .values(items_to_insert)
-        //     .on_conflict((transaction_version, event_index))
-        //     .do_update()
-        //     .set((
-        //         inserted_at.eq(excluded(inserted_at)),
-        //         indexed_type.eq(excluded(indexed_type)),
-        //     )),
         diesel::insert_into(schema::messages::table)
             .values(items_to_insert.into_iter().map(|event| {
                 (
@@ -56,13 +50,44 @@ fn create_message_events_query(
                     creation_timestamp.eq(event.creation_timestamp),
                     creation_tx_version.eq(event.creation_tx_version),
                     content.eq(event.content),
-                    // Set update fields to None for new messages
                     update_timestamp.eq(None::<i64>),
                     update_tx_version.eq(None::<i64>),
                 )
             }))
-            .on_conflict((message_obj_addr, creator_addr))
-            .do_nothing(), // As
+            .on_conflict(message_obj_addr)
+            .do_nothing(),
+        None,
+    )
+}
+
+fn update_message_events_query(
+    items_to_insert: Vec<UpdateMessageEvent>,
+) -> (
+    impl QueryFragment<Pg> + diesel::query_builder::QueryId + Send,
+    Option<&'static str>,
+) {
+    use schema::messages::dsl::*;
+    (
+        diesel::update(schema::messages::table)
+            .filter(
+                message_obj_addr
+                    .eq_any(items_to_insert.iter().map(|event| &event.message_obj_addr)),
+            )
+            .set((
+                content.eq(diesel::dsl::any(
+                    items_to_insert.iter().map(|event| &event.content),
+                )),
+                update_timestamp.eq(diesel::dsl::any(
+                    items_to_insert
+                        .iter()
+                        .map(|event| event.update_timestamp as i64),
+                )),
+                update_tx_version.eq(diesel::dsl::any(
+                    items_to_insert
+                        .iter()
+                        .map(|event| event.update_tx_version as i64),
+                )),
+            )),
         None,
     )
 }
@@ -124,7 +149,9 @@ impl Processable for EventsStorer {
             }
             (Err(e), _) | (_, Err(e)) => {
                 error!("Failed to store events: {:?}", e);
-                return Err(ProcessorError::ProcessingError(e.to_string()));
+                return Err(ProcessorError::ProcessError {
+                    message: e.to_string(),
+                });
             }
         }
 
