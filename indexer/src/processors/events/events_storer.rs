@@ -60,7 +60,23 @@ fn update_message_events_query(
     let mut queries = Vec::new();
     for event in items_to_insert {
         let query =
-            diesel::update(messages.filter(message_obj_addr.eq(event.message_obj_addr))).set(event);
+            // diesel::update(messages.filter(message_obj_addr.eq(event.message_obj_addr))).set(event);
+             diesel::insert_into(schema::messages::table)
+            .values(items_to_insert)
+            .on_conflict(message_obj_addr)
+            .do_update()
+            .set((
+                // owner_address.eq(excluded(owner_address)),
+                // state_key_hash.eq(excluded(state_key_hash)),
+                // allow_ungated_transfer.eq(excluded(allow_ungated_transfer)),
+                // last_guid_creation_num.eq(excluded(last_guid_creation_num)),
+                // last_transaction_version.eq(excluded(last_transaction_version)),
+                // is_deleted.eq(excluded(is_deleted)),
+                // inserted_at.eq(excluded(inserted_at)),
+                // untransferrable.eq(excluded(untransferrable)),
+                // content.eq(excluded(content),
+                
+            ));
         queries.push((query, None));
     }
     queries
