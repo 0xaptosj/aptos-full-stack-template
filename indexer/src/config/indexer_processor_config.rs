@@ -1,5 +1,3 @@
-// Copyright © Aptos Foundation
-// SPDX-License-Identifier: Apache-2.0
 
 use super::processor_config::ProcessorConfig;
 use crate::processors::events::events_processor::EventsProcessor;

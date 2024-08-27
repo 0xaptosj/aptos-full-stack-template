@@ -32,6 +32,9 @@ diesel::table! {
         #[max_length = 300]
         creator_addr -> Varchar,
         creation_timestamp -> Int8,
+        creation_tx_version -> Int8,
+        update_timestamp -> Nullable<Int8>,
+        update_tx_version -> Nullable<Int8>,
         content -> Text,
     }
 }
@@ -46,4 +49,9 @@ diesel::table! {
     }
 }
 
-diesel::allow_tables_to_appear_in_same_query!(events, ledger_infos, messages, processor_status,);
+diesel::allow_tables_to_appear_in_same_query!(
+    events,
+    ledger_infos,
+    messages,
+    processor_status,
+);

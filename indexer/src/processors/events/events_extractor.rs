@@ -1,4 +1,4 @@
-use crate::db::common::models::events_models::EventModel;
+use crate::db::common::models::events_models::ContractEvent;
 use anyhow::Result;
 use aptos_indexer_processor_sdk::{
     aptos_protos::transaction::v1::{transaction::TxnData, Transaction},
@@ -27,20 +27,19 @@ impl EventsExtractor {
 #[async_trait]
 impl Processable for EventsExtractor {
     type Input = Transaction;
-    type Output = EventModel;
+    type Output = ContractEvent;
     type RunType = AsyncRunType;
 
     async fn process(
         &mut self,
         item: TransactionContext<Transaction>,
-    ) -> Result<Option<TransactionContext<EventModel>>, ProcessorError> {
+    ) -> Result<Option<TransactionContext<ContractEvent>>, ProcessorError> {
         let events = item
             .data
             .par_iter()
             .map(|txn| {
                 let mut events = vec![];
                 let txn_version = txn.version as i64;
-                let block_height = txn.block_height as i64;
                 let txn_data = match txn.txn_data.as_ref() {
                     Some(data) => data,
                     None => {
@@ -59,17 +58,16 @@ impl Processable for EventsExtractor {
                     _ => &default,
                 };
 
-                let txn_events = EventModel::from_events(
+                let txn_events = ContractEvent::from_events(
                     self.contract_address.as_str(),
                     raw_events,
                     txn_version,
-                    block_height,
                 );
                 events.extend(txn_events);
                 events
             })
             .flatten()
-            .collect::<Vec<EventModel>>();
+            .collect::<Vec<ContractEvent>>();
         Ok(Some(TransactionContext {
             data: events,
             start_version: item.start_version,
