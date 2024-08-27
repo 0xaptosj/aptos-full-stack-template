@@ -23,7 +23,8 @@ module message_board_addr::test_end_to_end {
 
         message_board::update_message(sender, message_obj, string::utf8(b"hello move"));
         let events = event::emitted_events();
-        // events length is still 1, UpdateMessageEvent overwrites CreateMessageEvent, this is unexpected to me
+        // Since we force event type to be UpdateMessageEvent when calling get_message_obj_from_update_message_event()
+        // This will filter out other events (e.g. CreateMessageEvent) when calling event::emitted_events()
         let message_obj = message_board::get_message_obj_from_update_message_event(vector::borrow(&events, 0));
         let (content, creator) = message_board::get_message_content(message_obj);
         assert!(content == string::utf8(b"hello move"), 2);
