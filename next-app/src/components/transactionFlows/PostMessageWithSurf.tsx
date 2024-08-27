@@ -45,6 +45,9 @@ export function PostMessageWithSurf() {
   const { connected, account, network } = useWallet();
   const { client: walletClient } = useWalletClient();
 
+  account?.address;
+  account?.publicKey;
+
   const form = useForm<z.infer<typeof FormSchema>>({
     resolver: zodResolver(FormSchema),
     defaultValues: {

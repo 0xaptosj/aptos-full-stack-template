@@ -4,7 +4,7 @@ use crate::schema::messages;
 use aptos_indexer_processor_sdk::{
     aptos_protos::transaction::v1::Event as EventPB, utils::convert::standardize_address,
 };
-use diesel::{Identifiable, Insertable};
+use diesel::{AsChangeset, Identifiable, Insertable};
 use field_count::FieldCount;
 use serde::{Deserialize, Serialize};
 
@@ -53,7 +53,8 @@ pub struct Message {
     pub content: String,
 }
 
-#[derive(Clone, Debug, Deserialize, FieldCount, Serialize)]
+#[derive(Clone, Debug, Deserialize, FieldCount, Insertable, Serialize)]
+#[diesel(table_name = messages)]
 pub struct CreateMessageEvent {
     pub message_obj_addr: String,
     pub creator_addr: String,
@@ -62,7 +63,8 @@ pub struct CreateMessageEvent {
     pub content: String,
 }
 
-#[derive(Clone, Debug, Deserialize, FieldCount, Serialize)]
+#[derive(Clone, AsChangeset)]
+#[diesel(table_name = messages)]
 pub struct UpdateMessageEvent {
     pub message_obj_addr: String,
     pub update_timestamp: i64,

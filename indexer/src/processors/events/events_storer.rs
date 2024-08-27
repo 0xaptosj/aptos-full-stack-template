@@ -1,9 +1,9 @@
 use crate::{
-    db::common::models::events_models::{
-        ContractEvent, CreateMessageEvent, Message, UpdateMessageEvent,
-    },
+    db::common::models::events_models::{ContractEvent, CreateMessageEvent, UpdateMessageEvent},
     schema::{self},
-    utils::database::{execute_in_chunks, get_config_table_chunk_size, ArcDbPool},
+    utils::database::{
+        execute_in_chunks, execute_with_better_error_conn, get_config_table_chunk_size, ArcDbPool,
+    },
 };
 use ahash::AHashMap;
 use anyhow::Result;
@@ -43,17 +43,7 @@ fn create_message_events_query(
     use schema::messages::dsl::*;
     (
         diesel::insert_into(schema::messages::table)
-            .values(items_to_insert.into_iter().map(|event| {
-                (
-                    message_obj_addr.eq(event.message_obj_addr),
-                    creator_addr.eq(event.creator_addr),
-                    creation_timestamp.eq(event.creation_timestamp),
-                    creation_tx_version.eq(event.creation_tx_version),
-                    content.eq(event.content),
-                    update_timestamp.eq(None::<i64>),
-                    update_tx_version.eq(None::<i64>),
-                )
-            }))
+            .values(items_to_insert)
             .on_conflict(message_obj_addr)
             .do_nothing(),
         None,
@@ -62,34 +52,18 @@ fn create_message_events_query(
 
 fn update_message_events_query(
     items_to_insert: Vec<UpdateMessageEvent>,
-) -> (
+) -> Vec<(
     impl QueryFragment<Pg> + diesel::query_builder::QueryId + Send,
     Option<&'static str>,
-) {
+)> {
     use schema::messages::dsl::*;
-    (
-        diesel::update(schema::messages::table)
-            .filter(
-                message_obj_addr
-                    .eq_any(items_to_insert.iter().map(|event| &event.message_obj_addr)),
-            )
-            .set((
-                content.eq(diesel::dsl::any(
-                    items_to_insert.iter().map(|event| &event.content),
-                )),
-                update_timestamp.eq(diesel::dsl::any(
-                    items_to_insert
-                        .iter()
-                        .map(|event| event.update_timestamp as i64),
-                )),
-                update_tx_version.eq(diesel::dsl::any(
-                    items_to_insert
-                        .iter()
-                        .map(|event| event.update_tx_version as i64),
-                )),
-            )),
-        None,
-    )
+    let mut queries = Vec::new();
+    for event in items_to_insert {
+        let query =
+            diesel::update(messages.filter(message_obj_addr.eq(event.message_obj_addr))).set(event);
+        queries.push((query, None));
+    }
+    queries
 }
 
 #[async_trait]
@@ -129,31 +103,65 @@ impl Processable for EventsStorer {
         )
         .await;
 
-        let update_result = execute_in_chunks(
-            self.conn_pool.clone(),
-            update_message_events_query,
-            &update_events,
-            get_config_table_chunk_size::<UpdateMessageEvent>(
-                "update_message_events",
-                &per_table_chunk_sizes,
-            ),
-        )
-        .await;
-
-        match (create_result, update_result) {
-            (Ok(_), Ok(_)) => {
+        match create_result {
+            Ok(_) => {
                 info!(
                     "Events version [{}, {}] stored successfully",
                     events.start_version, events.end_version
                 );
             }
-            (Err(e), _) | (_, Err(e)) => {
+            Err(e) => {
                 error!("Failed to store events: {:?}", e);
                 return Err(ProcessorError::ProcessError {
                     message: e.to_string(),
                 });
             }
         }
+
+        let update_queries = update_message_events_query(update_events);
+        // let update_result = execute_in_chunks(
+        //     self.conn_pool.clone(),
+        //     update_queries,
+        //     &update_events,
+        //     get_config_table_chunk_size::<UpdateMessageEvent>(
+        //         "update_message_events",
+        //         &per_table_chunk_sizes,
+        //     ),
+        // );
+
+        let mut conn = self.conn_pool.clone();
+        for (query, _) in update_queries {
+            execute_with_better_error_conn(&mut conn, query, None)
+                .await
+                .context("Error updating chain_id!")
+        }
+
+        // let update_result = execute_in_chunks(
+        //     self.conn_pool.clone(),
+        //     update_message_events_query,
+        //     &update_events,
+        //     get_config_table_chunk_size::<UpdateMessageEvent>(
+        //         "update_message_events",
+        //         &per_table_chunk_sizes,
+        //     ),
+        // )
+        // .await;
+        // let update_result =
+
+        // match (create_result, update_result) {
+        //     (Ok(_), Ok(_)) => {
+        //         info!(
+        //             "Events version [{}, {}] stored successfully",
+        //             events.start_version, events.end_version
+        //         );
+        //     }
+        //     (Err(e), _) | (_, Err(e)) => {
+        //         error!("Failed to store events: {:?}", e);
+        //         return Err(ProcessorError::ProcessError {
+        //             message: e.to_string(),
+        //         });
+        //     }
+        // }
 
         Ok(Some(events))
     }

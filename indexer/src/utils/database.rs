@@ -229,7 +229,7 @@ where
     res
 }
 
-async fn execute_or_retry_cleaned<U, T>(
+pub async fn execute_or_retry_cleaned<U, T>(
     conn: ArcDbPool,
     build_query: fn(Vec<T>) -> (U, Option<&'static str>),
     items: Vec<T>,
