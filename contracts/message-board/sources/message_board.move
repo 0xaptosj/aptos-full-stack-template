@@ -4,7 +4,6 @@ module message_board_addr::message_board {
 
     use aptos_framework::event;
     use aptos_framework::object::{Self, Object};
-    use aptos_framework::timestamp;
 
     /// Only the message creator can update the message content
     const ERR_ONLY_MESSAGE_CREATOR_CAN_UPDATE: u64 = 1;
@@ -18,14 +17,12 @@ module message_board_addr::message_board {
     struct CreateMessageEvent has drop, store {
         message_obj: Object<Message>,
         message: Message,
-        timestamp: u64,
     }
 
     #[event]
     struct UpdateMessageEvent has drop, store {
         message_obj: Object<Message>,
         message: Message,
-        timestamp: u64,
     }
 
     // This function is only called once when the module is published for the first time.
@@ -47,7 +44,6 @@ module message_board_addr::message_board {
         event::emit(CreateMessageEvent {
             message_obj: object::object_from_constructor_ref(message_obj_constructor_ref),
             message,
-            timestamp: timestamp::now_seconds(),
         });
     }
 
@@ -60,7 +56,6 @@ module message_board_addr::message_board {
         event::emit(UpdateMessageEvent {
             message_obj,
             message: *message,
-            timestamp: timestamp::now_seconds(),
         });
     }
 
@@ -81,7 +76,6 @@ module message_board_addr::message_board {
     #[test_only]
     public fun init_module_for_test(aptos_framework: &signer, sender: &signer) {
         init_module(sender);
-        timestamp::set_time_has_started_for_testing(aptos_framework);
     }
 
     #[test_only]

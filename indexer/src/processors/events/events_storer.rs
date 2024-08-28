@@ -1,9 +1,7 @@
 use crate::{
     db::common::models::events_models::{ContractEvent, CreateMessageEvent, UpdateMessageEvent},
     schema::{self},
-    utils::database::{
-        execute_in_chunks, execute_with_better_error_conn, get_config_table_chunk_size, ArcDbPool,
-    },
+    utils::database::{execute_in_chunks, get_config_table_chunk_size, ArcDbPool},
 };
 use ahash::AHashMap;
 use anyhow::Result;
@@ -52,34 +50,22 @@ fn create_message_events_query(
 
 fn update_message_events_query(
     items_to_insert: Vec<UpdateMessageEvent>,
-) -> Vec<(
+) -> (
     impl QueryFragment<Pg> + diesel::query_builder::QueryId + Send,
     Option<&'static str>,
-)> {
+) {
     use schema::messages::dsl::*;
-    let mut queries = Vec::new();
-    for event in items_to_insert {
-        let query =
-            // diesel::update(messages.filter(message_obj_addr.eq(event.message_obj_addr))).set(event);
-             diesel::insert_into(schema::messages::table)
+    (
+        diesel::insert_into(schema::messages::table)
             .values(items_to_insert)
             .on_conflict(message_obj_addr)
             .do_update()
             .set((
-                // owner_address.eq(excluded(owner_address)),
-                // state_key_hash.eq(excluded(state_key_hash)),
-                // allow_ungated_transfer.eq(excluded(allow_ungated_transfer)),
-                // last_guid_creation_num.eq(excluded(last_guid_creation_num)),
-                // last_transaction_version.eq(excluded(last_transaction_version)),
-                // is_deleted.eq(excluded(is_deleted)),
-                // inserted_at.eq(excluded(inserted_at)),
-                // untransferrable.eq(excluded(untransferrable)),
-                // content.eq(excluded(content),
-                
-            ));
-        queries.push((query, None));
-    }
-    queries
+                last_update_tx_version.eq(excluded(last_update_tx_version)),
+                content.eq(excluded(content)),
+            )),
+        Some(" WHERE messages.last_update_tx_version <= excluded.last_update_tx_version "),
+    )
 }
 
 #[async_trait]
@@ -122,62 +108,43 @@ impl Processable for EventsStorer {
         match create_result {
             Ok(_) => {
                 info!(
-                    "Events version [{}, {}] stored successfully",
+                    "Create message event version [{}, {}] stored successfully",
                     events.start_version, events.end_version
                 );
             }
             Err(e) => {
-                error!("Failed to store events: {:?}", e);
+                error!("Failed to store create message events: {:?}", e);
                 return Err(ProcessorError::ProcessError {
                     message: e.to_string(),
                 });
             }
         }
 
-        let update_queries = update_message_events_query(update_events);
-        // let update_result = execute_in_chunks(
-        //     self.conn_pool.clone(),
-        //     update_queries,
-        //     &update_events,
-        //     get_config_table_chunk_size::<UpdateMessageEvent>(
-        //         "update_message_events",
-        //         &per_table_chunk_sizes,
-        //     ),
-        // );
+        let update_result = execute_in_chunks(
+            self.conn_pool.clone(),
+            update_message_events_query,
+            &update_events,
+            get_config_table_chunk_size::<UpdateMessageEvent>(
+                "update_message_events",
+                &per_table_chunk_sizes,
+            ),
+        )
+        .await;
 
-        let mut conn = self.conn_pool.clone();
-        for (query, _) in update_queries {
-            execute_with_better_error_conn(&mut conn, query, None)
-                .await
-                .context("Error updating chain_id!")
+        match update_result {
+            Ok(_) => {
+                info!(
+                    "Update message event version [{}, {}] stored successfully",
+                    events.start_version, events.end_version
+                );
+            }
+            Err(e) => {
+                error!("Failed to store update message events: {:?}", e);
+                return Err(ProcessorError::ProcessError {
+                    message: e.to_string(),
+                });
+            }
         }
-
-        // let update_result = execute_in_chunks(
-        //     self.conn_pool.clone(),
-        //     update_message_events_query,
-        //     &update_events,
-        //     get_config_table_chunk_size::<UpdateMessageEvent>(
-        //         "update_message_events",
-        //         &per_table_chunk_sizes,
-        //     ),
-        // )
-        // .await;
-        // let update_result =
-
-        // match (create_result, update_result) {
-        //     (Ok(_), Ok(_)) => {
-        //         info!(
-        //             "Events version [{}, {}] stored successfully",
-        //             events.start_version, events.end_version
-        //         );
-        //     }
-        //     (Err(e), _) | (_, Err(e)) => {
-        //         error!("Failed to store events: {:?}", e);
-        //         return Err(ProcessorError::ProcessError {
-        //             message: e.to_string(),
-        //         });
-        //     }
-        // }
 
         Ok(Some(events))
     }

@@ -7,7 +7,7 @@ script {
 
     // This Move script runs atomically
     fun update_message(sender: &signer) {
-        let message_obj_addr = @0xcdbbb6c1c7a054ff876b0478f20e0585edabf2cec28ea8376287727dbbfaa79e;
+        let message_obj_addr = @0xfcf360032ac5f5e3771afe5b669d8d04c99c5e69b58e531c903388e93968ab94;
         message_board::update_message(sender, object::address_to_object(message_obj_addr), string::utf8(b"updated message"));
     }
 }

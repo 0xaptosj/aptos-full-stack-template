@@ -4,12 +4,9 @@ use crate::schema::messages;
 use aptos_indexer_processor_sdk::{
     aptos_protos::transaction::v1::Event as EventPB, utils::convert::standardize_address,
 };
-use diesel::{AsChangeset, Identifiable, Insertable};
+use diesel::{AsChangeset, Insertable};
 use field_count::FieldCount;
 use serde::{Deserialize, Serialize};
-
-// p99 currently is 303 so using 300 as a safe max length
-const EVENT_TYPE_MAX_LENGTH: usize = 300;
 
 #[derive(Clone, Debug, Deserialize, Serialize)]
 pub struct MoveObj {
@@ -28,7 +25,6 @@ pub struct MessageOnChain {
 pub struct CreateMessageEventOnChain {
     pub message_obj: MoveObj,
     pub message: MessageOnChain,
-    pub timestamp: i64,
 }
 
 #[derive(Clone, Debug, Deserialize, Serialize)]
@@ -36,21 +32,6 @@ pub struct CreateMessageEventOnChain {
 pub struct UpdateMessageEventOnChain {
     pub message_obj: MoveObj,
     pub message: MessageOnChain,
-    pub timestamp: i64,
-}
-
-#[derive(Clone, Debug, Deserialize, FieldCount, Identifiable, Insertable, Serialize)]
-#[diesel(primary_key(id))]
-#[diesel(table_name = messages)]
-pub struct Message {
-    pub id: i64,
-    pub message_obj_addr: String,
-    pub creator_addr: String,
-    pub creation_timestamp: i64,
-    pub creation_tx_version: i64,
-    pub update_timestamp: Option<i64>,
-    pub update_tx_version: Option<i64>,
-    pub content: String,
 }
 
 #[derive(Clone, Debug, Deserialize, FieldCount, Insertable, Serialize)]
@@ -58,17 +39,15 @@ pub struct Message {
 pub struct CreateMessageEvent {
     pub message_obj_addr: String,
     pub creator_addr: String,
-    pub creation_timestamp: i64,
     pub creation_tx_version: i64,
     pub content: String,
 }
 
-#[derive(Clone, AsChangeset)]
+#[derive(AsChangeset, Clone, Debug, Deserialize, FieldCount, Insertable, Serialize)]
 #[diesel(table_name = messages)]
 pub struct UpdateMessageEvent {
     pub message_obj_addr: String,
-    pub update_timestamp: i64,
-    pub update_tx_version: i64,
+    pub last_update_tx_version: i64,
     pub content: String,
 }
 
@@ -93,7 +72,7 @@ impl ContractEvent {
             ) {
                 println!("CreateMessageEvent {}", event.data.as_str());
                 let create_message_event_on_chain: CreateMessageEventOnChain =
-                    serde_json::from_str(&event.data.as_str()).expect(
+                    serde_json::from_str(event.data.as_str()).expect(
                         format!(
                             "Failed to parse CreateMessageEvent, {}",
                             event.data.as_str()
@@ -107,7 +86,6 @@ impl ContractEvent {
                     creator_addr: standardize_address(
                         create_message_event_on_chain.message.creator.as_str(),
                     ),
-                    creation_timestamp: create_message_event_on_chain.timestamp,
                     creation_tx_version: transaction_version,
                     content: create_message_event_on_chain.message.content,
                 };
@@ -117,7 +95,7 @@ impl ContractEvent {
             ) {
                 println!("UpdateMessageEvent {}", event.data.as_str());
                 let update_message_event_on_chain: UpdateMessageEventOnChain =
-                    serde_json::from_str(&event.data.as_str()).expect(
+                    serde_json::from_str(event.data.as_str()).expect(
                         format!(
                             "Failed to parse UpdateMessageEvent, {}",
                             event.data.as_str()
@@ -128,8 +106,7 @@ impl ContractEvent {
                     message_obj_addr: standardize_address(
                         update_message_event_on_chain.message_obj.inner.as_str(),
                     ),
-                    update_timestamp: update_message_event_on_chain.timestamp,
-                    update_tx_version: transaction_version,
+                    last_update_tx_version: transaction_version,
                     content: update_message_event_on_chain.message.content,
                 };
                 Some(ContractEvent::UpdateMessageEvent(update_message_event))
