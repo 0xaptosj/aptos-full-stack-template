@@ -46,7 +46,7 @@ diesel migration revert \
 	--config-file="src/db/postgres/diesel.toml"
 ```
 
-Edit the `config.yaml` file to point to the correct network, db url, start version, etc. Run the indexer.
+Create a `config.yaml` file from `example.config.yaml` file to point to the correct network, db url, start version, etc. Run the indexer.
 
 ```sh
 cargo run --release -- -c config.yaml
