@@ -31,8 +31,9 @@ diesel::table! {
         message_obj_addr -> Varchar,
         #[max_length = 300]
         creator_addr -> Varchar,
-        creation_tx_version -> Int8,
-        last_update_tx_version -> Nullable<Int8>,
+        creation_timestamp -> Int8,
+        last_update_timestamp -> Int8,
+        last_update_event_idx -> Int8,
         content -> Text,
     }
 }

@@ -1,5 +1,5 @@
 use crate::{
-    db::common::models::events_models::{ContractEvent, CreateMessageEvent, UpdateMessageEvent},
+    db::common::models::events_models::{ContractEvent, Message},
     schema::{self},
     utils::database::{execute_in_chunks, get_config_table_chunk_size, ArcDbPool},
 };
@@ -14,7 +14,8 @@ use async_trait::async_trait;
 use diesel::{
     pg::{upsert::excluded, Pg},
     query_builder::QueryFragment,
-    ExpressionMethods,
+    query_dsl::methods::FilterDsl,
+    BoolExpressionMethods, ExpressionMethods,
 };
 use tracing::{error, info};
 
@@ -32,8 +33,8 @@ impl EventsStorer {
     }
 }
 
-fn create_message_events_query(
-    items_to_insert: Vec<CreateMessageEvent>,
+fn create_message_events_sql(
+    items_to_insert: Vec<Message>,
 ) -> (
     impl QueryFragment<Pg> + diesel::query_builder::QueryId + Send,
     Option<&'static str>,
@@ -48,8 +49,8 @@ fn create_message_events_query(
     )
 }
 
-fn update_message_events_query(
-    items_to_insert: Vec<UpdateMessageEvent>,
+fn update_message_events_sql(
+    items_to_insert: Vec<Message>,
 ) -> (
     impl QueryFragment<Pg> + diesel::query_builder::QueryId + Send,
     Option<&'static str>,
@@ -61,10 +62,23 @@ fn update_message_events_query(
             .on_conflict(message_obj_addr)
             .do_update()
             .set((
-                last_update_tx_version.eq(excluded(last_update_tx_version)),
+                message_obj_addr.eq(excluded(message_obj_addr)),
+                creator_addr.eq(excluded(creator_addr)),
+                creation_timestamp.eq(excluded(creation_timestamp)),
+                last_update_timestamp.eq(excluded(last_update_timestamp)),
+                last_update_event_idx.eq(excluded(last_update_event_idx)),
                 content.eq(excluded(content)),
-            )),
-        Some(" WHERE messages.last_update_tx_version <= excluded.last_update_tx_version "),
+            ))
+            .filter(
+                // Update only if the last update timestamp is greater than the existing one
+                // or if the last update timestamp is the same but the event index is greater
+                last_update_timestamp
+                    .lt(excluded(last_update_timestamp))
+                    .or(last_update_timestamp
+                        .eq(excluded(last_update_timestamp))
+                        .and(last_update_event_idx.lt(excluded(last_update_event_idx)))),
+            ),
+        None,
     )
 }
 
@@ -83,11 +97,11 @@ impl Processable for EventsStorer {
             (vec![], vec![]),
             |(mut create_events, mut update_events), event| {
                 match event {
-                    ContractEvent::CreateMessageEvent(create_message_event) => {
-                        create_events.push(create_message_event);
+                    ContractEvent::CreateMessageEvent(message) => {
+                        create_events.push(message);
                     }
-                    ContractEvent::UpdateMessageEvent(update_message_event) => {
-                        update_events.push(update_message_event);
+                    ContractEvent::UpdateMessageEvent(message) => {
+                        update_events.push(message);
                     }
                 }
                 (create_events, update_events)
@@ -96,12 +110,9 @@ impl Processable for EventsStorer {
 
         let create_result = execute_in_chunks(
             self.conn_pool.clone(),
-            create_message_events_query,
+            create_message_events_sql,
             &create_events,
-            get_config_table_chunk_size::<CreateMessageEvent>(
-                "create_message_events",
-                &per_table_chunk_sizes,
-            ),
+            get_config_table_chunk_size::<Message>("messages", &per_table_chunk_sizes),
         )
         .await;
 
@@ -122,12 +133,10 @@ impl Processable for EventsStorer {
 
         let update_result = execute_in_chunks(
             self.conn_pool.clone(),
-            update_message_events_query,
+            update_message_events_sql,
             &update_events,
-            get_config_table_chunk_size::<UpdateMessageEvent>(
-                "update_message_events",
-                &per_table_chunk_sizes,
-            ),
+            // run update sequentially because we cannot update one record multiple times in a single DB transaction
+            1,
         )
         .await;
 

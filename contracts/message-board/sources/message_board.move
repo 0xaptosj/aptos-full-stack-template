@@ -1,9 +1,11 @@
 module message_board_addr::message_board {
+    use std::option::{Self, Option};
     use std::signer;
     use std::string::String;
 
     use aptos_framework::event;
     use aptos_framework::object::{Self, Object};
+    use aptos_framework::timestamp;
 
     /// Only the message creator can update the message content
     const ERR_ONLY_MESSAGE_CREATOR_CAN_UPDATE: u64 = 1;
@@ -11,17 +13,19 @@ module message_board_addr::message_board {
     struct Message has copy, drop, key, store {
         creator: address,
         content: String,
+        creation_timestamp: u64,
+        last_update_timestamp: Option<u64>,
     }
 
     #[event]
     struct CreateMessageEvent has drop, store {
-        message_obj: Object<Message>,
+        message_obj_addr: address,
         message: Message,
     }
 
     #[event]
     struct UpdateMessageEvent has drop, store {
-        message_obj: Object<Message>,
+        message_obj_addr: address,
         message: Message,
     }
 
@@ -38,11 +42,13 @@ module message_board_addr::message_board {
         let message = Message {
             creator: signer::address_of(sender),
             content,
+            creation_timestamp: timestamp::now_seconds(),
+            last_update_timestamp: option::none(),
         };
         move_to(message_obj_signer, message);
 
         event::emit(CreateMessageEvent {
-            message_obj: object::object_from_constructor_ref(message_obj_constructor_ref),
+            message_obj_addr: object::address_from_constructor_ref(message_obj_constructor_ref),
             message,
         });
     }
@@ -52,9 +58,10 @@ module message_board_addr::message_board {
         let message = borrow_global_mut<Message>(object::object_address(&message_obj));
         assert!(message.creator == signer::address_of(sender), ERR_ONLY_MESSAGE_CREATOR_CAN_UPDATE);
         message.content = new_content;
+        message.last_update_timestamp = option::some(timestamp::now_seconds());
 
         event::emit(UpdateMessageEvent {
-            message_obj,
+            message_obj_addr: object::object_address(&message_obj),
             message: *message,
         });
     }
@@ -75,16 +82,17 @@ module message_board_addr::message_board {
 
     #[test_only]
     public fun init_module_for_test(aptos_framework: &signer, sender: &signer) {
+        timestamp::set_time_has_started_for_testing(aptos_framework);
         init_module(sender);
     }
 
     #[test_only]
     public fun get_message_obj_from_create_message_event(event: &CreateMessageEvent): Object<Message> {
-        event.message_obj
+        object::address_to_object(event.message_obj_addr)
     }
 
     #[test_only]
     public fun get_message_obj_from_update_message_event(event: &UpdateMessageEvent): Object<Message> {
-        event.message_obj
+        object::address_to_object(event.message_obj_addr)
     }
 }

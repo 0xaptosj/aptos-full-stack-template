@@ -1,5 +1,3 @@
-#![allow(clippy::extra_unused_lifetimes)]
-
 use crate::schema::messages;
 use aptos_indexer_processor_sdk::{
     aptos_protos::transaction::v1::Event as EventPB, utils::convert::standardize_address,
@@ -9,8 +7,9 @@ use field_count::FieldCount;
 use serde::{Deserialize, Serialize};
 
 #[derive(Clone, Debug, Deserialize, Serialize)]
-pub struct MoveObj {
-    pub inner: String,
+/// On-chain representation of a last update timestamp
+pub struct LastUpdateTimestamp {
+    vec: Vec<String>,
 }
 
 #[derive(Clone, Debug, Deserialize, Serialize)]
@@ -18,51 +17,44 @@ pub struct MoveObj {
 pub struct MessageOnChain {
     pub creator: String,
     pub content: String,
+    pub creation_timestamp: String,
+    pub last_update_timestamp: LastUpdateTimestamp,
 }
 
 #[derive(Clone, Debug, Deserialize, Serialize)]
 /// On-chain representation of a message creation event
 pub struct CreateMessageEventOnChain {
-    pub message_obj: MoveObj,
+    pub message_obj_addr: String,
     pub message: MessageOnChain,
 }
 
 #[derive(Clone, Debug, Deserialize, Serialize)]
 /// On-chain representation of a message update event
 pub struct UpdateMessageEventOnChain {
-    pub message_obj: MoveObj,
-    pub message: MessageOnChain,
-}
-
-#[derive(Clone, Debug, Deserialize, FieldCount, Insertable, Serialize)]
-#[diesel(table_name = messages)]
-pub struct CreateMessageEvent {
     pub message_obj_addr: String,
-    pub creator_addr: String,
-    pub creation_tx_version: i64,
-    pub content: String,
+    pub message: MessageOnChain,
 }
 
 #[derive(AsChangeset, Clone, Debug, Deserialize, FieldCount, Insertable, Serialize)]
 #[diesel(table_name = messages)]
-pub struct UpdateMessageEvent {
+/// Database representation of a message
+pub struct Message {
     pub message_obj_addr: String,
-    pub last_update_tx_version: i64,
+    pub creator_addr: String,
+    pub creation_timestamp: i64,
+    pub last_update_timestamp: i64,
+    pub last_update_event_idx: i64,
     pub content: String,
 }
 
-#[derive(Clone)]
+#[derive(Debug, Clone)]
 pub enum ContractEvent {
-    CreateMessageEvent(CreateMessageEvent),
-    UpdateMessageEvent(UpdateMessageEvent),
+    CreateMessageEvent(Message),
+    UpdateMessageEvent(Message),
 }
 
 impl ContractEvent {
-    pub fn from_event(
-        contract_address: &str,
-        event: &EventPB,
-        transaction_version: i64,
-    ) -> Option<Self> {
+    pub fn from_event(contract_address: &str, event_idx: usize, event: &EventPB) -> Option<Self> {
         let t: &str = event.type_str.as_ref();
         let should_include = t.starts_with(contract_address);
 
@@ -79,17 +71,24 @@ impl ContractEvent {
                         )
                         .as_str(),
                     );
-                let create_message_event = CreateMessageEvent {
+                let creation_timestamp = create_message_event_on_chain
+                    .message
+                    .creation_timestamp
+                    .parse()
+                    .unwrap();
+                let message = Message {
                     message_obj_addr: standardize_address(
-                        create_message_event_on_chain.message_obj.inner.as_str(),
+                        &create_message_event_on_chain.message_obj_addr,
                     ),
                     creator_addr: standardize_address(
                         create_message_event_on_chain.message.creator.as_str(),
                     ),
-                    creation_tx_version: transaction_version,
+                    creation_timestamp,
                     content: create_message_event_on_chain.message.content,
+                    last_update_timestamp: creation_timestamp,
+                    last_update_event_idx: 0,
                 };
-                Some(ContractEvent::CreateMessageEvent(create_message_event))
+                Some(ContractEvent::CreateMessageEvent(message))
             } else if t.starts_with(
                 format!("{}::message_board::UpdateMessageEvent", contract_address).as_str(),
             ) {
@@ -102,14 +101,28 @@ impl ContractEvent {
                         )
                         .as_str(),
                     );
-                let update_message_event = UpdateMessageEvent {
+                let message = Message {
                     message_obj_addr: standardize_address(
-                        update_message_event_on_chain.message_obj.inner.as_str(),
+                        &update_message_event_on_chain.message_obj_addr,
                     ),
-                    last_update_tx_version: transaction_version,
                     content: update_message_event_on_chain.message.content,
+                    creator_addr: standardize_address(
+                        update_message_event_on_chain.message.creator.as_str(),
+                    ),
+                    creation_timestamp: update_message_event_on_chain
+                        .message
+                        .creation_timestamp
+                        .parse()
+                        .unwrap(),
+                    last_update_timestamp: update_message_event_on_chain
+                        .message
+                        .last_update_timestamp
+                        .vec[0]
+                        .parse()
+                        .unwrap(),
+                    last_update_event_idx: event_idx as i64,
                 };
-                Some(ContractEvent::UpdateMessageEvent(update_message_event))
+                Some(ContractEvent::UpdateMessageEvent(message))
             } else {
                 None
             }
@@ -118,16 +131,11 @@ impl ContractEvent {
         }
     }
 
-    pub fn from_events(
-        contract_address: &str,
-        events: &[EventPB],
-        transaction_version: i64,
-    ) -> Vec<Self> {
+    pub fn from_events(contract_address: &str, events: &[EventPB]) -> Vec<Self> {
         events
             .iter()
             .enumerate()
-            .map(|(_, event)| Self::from_event(contract_address, event, transaction_version))
-            .filter_map(|event| event)
+            .filter_map(|(idx, event)| Self::from_event(contract_address, idx, event))
             .collect()
     }
 }

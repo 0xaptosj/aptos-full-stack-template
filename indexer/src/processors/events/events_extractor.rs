@@ -58,11 +58,8 @@ impl Processable for EventsExtractor {
                     _ => &default,
                 };
 
-                let txn_events = ContractEvent::from_events(
-                    self.contract_address.as_str(),
-                    raw_events,
-                    txn_version,
-                );
+                let txn_events =
+                    ContractEvent::from_events(self.contract_address.as_str(), raw_events);
                 events.extend(txn_events);
                 events
             })
