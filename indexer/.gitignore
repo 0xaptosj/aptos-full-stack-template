@@ -17,4 +17,5 @@ build
 .vscode/
 
 # Processor config
-config.yaml
+local.config.yaml
+cloud.config.yaml

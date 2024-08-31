@@ -6,30 +6,49 @@ We use the term indexer and processor interchangeably.
 
 # Running the indexer
 
-Drop the DB if exists.
+**Note: all commends below need to be run in the current indexer directory instead of root directory.**
+
+Drop the DB if exists. You cannot do this if you are using a cloud provider. Follow the revert migration command below instead.
 
 ```sh
-psql postgres://username@127.0.0.1:5432/postgres -c 'DROP DATABASE IF EXISTS "example-indexer"'
+psql postgres://username@127.0.0.1:5432/postgres \
+    -c 'DROP DATABASE IF EXISTS "example-indexer"'
 ```
 
 Create the DB.
 
 ```sh
-psql postgres://username@127.0.0.1:5432/postgres -c 'CREATE DATABASE "example-indexer"'
+psql postgres://username@127.0.0.1:5432/postgres \
+    -c 'CREATE DATABASE "example-indexer"'
 ```
 
-Create a new table, run the migration, regenerate the schema.
+Create a new migration file.
 
 ```sh
-# in /indexer/src/db/postgres
-diesel migration generate create-abc-table
-diesel migration run --database-url="postgresql://username:@localhost:5432/example-indexer"
+diesel migration generate create-abc-table \
+    --config-file="src/db/postgres/diesel.toml"
 ```
 
-With the `config.yaml` you created earlier, you’re ready to run the events processor:
+Run all pending migrations.
 
 ```sh
-# in /indexer
+diesel migration run \
+    --database-url="postgresql://username:@localhost:5432/example-indexer" \
+    --config-file="src/db/postgres/diesel.toml"
+```
+
+In case you want to revert all migrations. On cloud provider, you cannot drop database, so you need to revert all migrations if you want to reset.
+
+```sh
+diesel migration revert \
+	--all \
+    --database-url="postgresql://username:@localhost:5432/example-indexer" \
+	--config-file="src/db/postgres/diesel.toml"
+```
+
+Edit the `config.yaml` file to point to the correct network, db url, start version, etc. Run the indexer.
+
+```sh
 cargo run --release -- -c config.yaml
 ```
 

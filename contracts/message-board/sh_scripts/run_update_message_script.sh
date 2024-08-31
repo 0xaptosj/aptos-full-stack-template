@@ -2,7 +2,7 @@
 
 set -e
 
-echo "##### Running move script to create 2 messages in 1 tx #####"
+echo "##### Running move script to update some messages in 1 tx #####"
 
 CONTRACT_ADDRESS=$(cat contract_address.txt)
 
