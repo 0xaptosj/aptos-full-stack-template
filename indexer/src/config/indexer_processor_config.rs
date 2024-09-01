@@ -1,4 +1,3 @@
-
 use super::processor_config::ProcessorConfig;
 use crate::processors::events::events_processor::EventsProcessor;
 use anyhow::Result;

@@ -26,7 +26,7 @@ impl EventsProcessor {
     pub async fn new(config: IndexerProcessorConfig) -> Result<Self> {
         let conn_pool = new_db_pool(
             &config.db_config.postgres_connection_string,
-            Some(config.db_config.db_pool_size),
+            config.db_config.db_pool_size,
         )
         .await
         .expect("Failed to create connection pool");

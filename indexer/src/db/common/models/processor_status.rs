@@ -1,4 +1,3 @@
-
 #![allow(clippy::extra_unused_lifetimes)]
 
 use crate::{schema::processor_status, utils::database::DbPoolConnection};

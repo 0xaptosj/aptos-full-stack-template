@@ -10,6 +10,9 @@ server_config:
     auth_token: "auth_token_you_can_get_from_aptos_api_gateway"
     request_name_header: "events-processor"
   db_config:
-    postgres_connection_string: postgresql://username:@localhost:5432/example-indexer
+    postgres_connection_string: "postgresql://username:@localhost:5432/example-indexer"
+    # we set db_pool_size to a lower number on cloud because we use a free plan
+    # see limitation on vercel docs https://vercel.com/docs/storage/vercel-postgres/faq
+    db_pool_size: 25
   contract_config:
     contract_address: "your_contract_address"

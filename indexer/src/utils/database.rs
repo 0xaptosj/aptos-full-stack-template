@@ -1,4 +1,3 @@
-
 //! Database-related functions
 #![allow(clippy::extra_unused_lifetimes)]
 
@@ -15,7 +14,6 @@ use diesel_async::{
     },
     AsyncPgConnection, RunQueryDsl,
 };
-use diesel_migrations::{embed_migrations, EmbeddedMigrations};
 use futures_util::{future::BoxFuture, FutureExt};
 use std::sync::Arc;
 use tracing::{debug, warn};
@@ -26,10 +24,6 @@ pub type MyDbConnection = AsyncPgConnection;
 pub type DbPool = Pool<MyDbConnection>;
 pub type ArcDbPool = Arc<DbPool>;
 pub type DbPoolConnection<'a> = PooledConnection<'a, MyDbConnection>;
-
-pub const MIGRATIONS: EmbeddedMigrations = embed_migrations!("src/db/postgres/migrations");
-
-pub const DEFAULT_MAX_POOL_SIZE: u32 = 150;
 
 #[derive(QueryId)]
 /// Using this will append a where clause at the end of the string upsert function, e.g.
@@ -102,10 +96,7 @@ fn parse_and_clean_db_url(url: &str) -> (String, Option<String>) {
     (db_url.to_string(), cert_path)
 }
 
-pub async fn new_db_pool(
-    database_url: &str,
-    max_pool_size: Option<u32>,
-) -> Result<ArcDbPool, PoolError> {
+pub async fn new_db_pool(database_url: &str, max_pool_size: u32) -> Result<ArcDbPool, PoolError> {
     let (_url, cert_path) = parse_and_clean_db_url(database_url);
 
     let config = if cert_path.is_some() {
@@ -116,7 +107,7 @@ pub async fn new_db_pool(
         AsyncDieselConnectionManager::<MyDbConnection>::new(database_url)
     };
     let pool = Pool::builder()
-        .max_size(max_pool_size.unwrap_or(DEFAULT_MAX_POOL_SIZE))
+        .max_size(max_pool_size)
         .build(config)
         .await?;
     Ok(Arc::new(pool))

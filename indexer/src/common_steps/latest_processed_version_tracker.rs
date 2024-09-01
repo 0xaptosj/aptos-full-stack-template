@@ -43,7 +43,7 @@ where
     ) -> Result<Self> {
         let conn_pool = new_db_pool(
             &db_config.postgres_connection_string,
-            Some(db_config.db_pool_size),
+            db_config.db_pool_size,
         )
         .await
         .context("Failed to create connection pool")?;
