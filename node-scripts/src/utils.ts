@@ -10,14 +10,16 @@ import {
 import { createSurfClient } from "@thalalabs/surf";
 import { ABI } from "./abis/message_board_abi";
 
+export const getAptosClient = () => {
+  return new Aptos(
+    new AptosConfig({
+      network: Network.TESTNET,
+    })
+  );
+};
+
 export const getSurfClient = () => {
-  return createSurfClient(
-    new Aptos(
-      new AptosConfig({
-        network: Network.TESTNET,
-      })
-    )
-  ).useABI(ABI);
+  return createSurfClient(getAptosClient()).useABI(ABI);
 };
 
 export const getAccount = () => {
