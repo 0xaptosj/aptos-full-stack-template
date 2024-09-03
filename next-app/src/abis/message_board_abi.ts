@@ -1,5 +1,5 @@
 export const ABI = {
-  address: "0x4b1990191a80bed96eacb6df71ab0b0a5b16a9749dc7304edbce44db18e4b64f",
+  address: "0xda6c2a8c4eae7b4fb7ef1b3319cc201492cc04e49d17b57dd75456e9b85e84b4",
   name: "message_board",
   friends: [],
   exposed_functions: [
@@ -19,9 +19,9 @@ export const ABI = {
       is_view: true,
       generic_type_params: [],
       params: [
-        "0x1::object::Object<0x4b1990191a80bed96eacb6df71ab0b0a5b16a9749dc7304edbce44db18e4b64f::message_board::Message>",
+        "0x1::object::Object<0xda6c2a8c4eae7b4fb7ef1b3319cc201492cc04e49d17b57dd75456e9b85e84b4::message_board::Message>",
       ],
-      return: ["0x1::string::String", "address"],
+      return: ["0x1::string::String", "address", "u64", "u64"],
     },
     {
       name: "update_message",
@@ -31,7 +31,7 @@ export const ABI = {
       generic_type_params: [],
       params: [
         "&signer",
-        "0x1::object::Object<0x4b1990191a80bed96eacb6df71ab0b0a5b16a9749dc7304edbce44db18e4b64f::message_board::Message>",
+        "0x1::object::Object<0xda6c2a8c4eae7b4fb7ef1b3319cc201492cc04e49d17b57dd75456e9b85e84b4::message_board::Message>",
         "0x1::string::String",
       ],
       return: [],
@@ -47,7 +47,7 @@ export const ABI = {
         { name: "message_obj_addr", type: "address" },
         {
           name: "message",
-          type: "0x4b1990191a80bed96eacb6df71ab0b0a5b16a9749dc7304edbce44db18e4b64f::message_board::Message",
+          type: "0xda6c2a8c4eae7b4fb7ef1b3319cc201492cc04e49d17b57dd75456e9b85e84b4::message_board::Message",
         },
       ],
     },
@@ -60,7 +60,7 @@ export const ABI = {
         { name: "creator", type: "address" },
         { name: "content", type: "0x1::string::String" },
         { name: "creation_timestamp", type: "u64" },
-        { name: "last_update_timestamp", type: "0x1::option::Option<u64>" },
+        { name: "last_update_timestamp", type: "u64" },
       ],
     },
     {
@@ -72,7 +72,7 @@ export const ABI = {
         { name: "message_obj_addr", type: "address" },
         {
           name: "message",
-          type: "0x4b1990191a80bed96eacb6df71ab0b0a5b16a9749dc7304edbce44db18e4b64f::message_board::Message",
+          type: "0xda6c2a8c4eae7b4fb7ef1b3319cc201492cc04e49d17b57dd75456e9b85e84b4::message_board::Message",
         },
       ],
     },

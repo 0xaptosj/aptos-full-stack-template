@@ -17,7 +17,7 @@ module message_board_addr::test_end_to_end {
         message_board::create_message(sender, string::utf8(b"hello world"));
         let events = event::emitted_events();
         let message_obj = message_board::get_message_obj_from_create_message_event(vector::borrow(&events, 0));
-        let (content, creator) = message_board::get_message_content(message_obj);
+        let (content, creator, _, _) = message_board::get_message_content(message_obj);
         assert!(content == string::utf8(b"hello world"), 1);
         assert!(creator == sender_addr, 1);
 
@@ -26,7 +26,7 @@ module message_board_addr::test_end_to_end {
         // Since we force event type to be UpdateMessageEvent when calling get_message_obj_from_update_message_event()
         // This will filter out other events (e.g. CreateMessageEvent) when calling event::emitted_events()
         let message_obj = message_board::get_message_obj_from_update_message_event(vector::borrow(&events, 0));
-        let (content, creator) = message_board::get_message_content(message_obj);
+        let (content, creator, _, _) = message_board::get_message_content(message_obj);
         assert!(content == string::utf8(b"hello move"), 2);
         assert!(creator == sender_addr, 2);
     }

@@ -7,18 +7,12 @@ use field_count::FieldCount;
 use serde::{Deserialize, Serialize};
 
 #[derive(Clone, Debug, Deserialize, Serialize)]
-/// On-chain representation of a last update timestamp
-pub struct LastUpdateTimestamp {
-    vec: Vec<String>,
-}
-
-#[derive(Clone, Debug, Deserialize, Serialize)]
 /// On-chain representation of a message
 pub struct MessageOnChain {
     pub creator: String,
     pub content: String,
     pub creation_timestamp: String,
-    pub last_update_timestamp: LastUpdateTimestamp,
+    pub last_update_timestamp: String,
 }
 
 #[derive(Clone, Debug, Deserialize, Serialize)]
@@ -117,7 +111,6 @@ impl ContractEvent {
                     last_update_timestamp: update_message_event_on_chain
                         .message
                         .last_update_timestamp
-                        .vec[0]
                         .parse()
                         .unwrap(),
                     last_update_event_idx: event_idx as i64,

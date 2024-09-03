@@ -1,5 +1,4 @@
 module message_board_addr::message_board {
-    use std::option::{Self, Option};
     use std::signer;
     use std::string::String;
 
@@ -14,7 +13,7 @@ module message_board_addr::message_board {
         creator: address,
         content: String,
         creation_timestamp: u64,
-        last_update_timestamp: Option<u64>,
+        last_update_timestamp: u64,
     }
 
     #[event]
@@ -39,11 +38,12 @@ module message_board_addr::message_board {
     public entry fun create_message(sender: &signer, content: String) {
         let message_obj_constructor_ref = &object::create_object(@message_board_addr);
         let message_obj_signer = &object::generate_signer(message_obj_constructor_ref);
+        let time_now = timestamp::now_seconds();
         let message = Message {
             creator: signer::address_of(sender),
             content,
-            creation_timestamp: timestamp::now_seconds(),
-            last_update_timestamp: option::none(),
+            creation_timestamp: time_now,
+            last_update_timestamp:time_now,
         };
         move_to(message_obj_signer, message);
 
@@ -58,7 +58,7 @@ module message_board_addr::message_board {
         let message = borrow_global_mut<Message>(object::object_address(&message_obj));
         assert!(message.creator == signer::address_of(sender), ERR_ONLY_MESSAGE_CREATOR_CAN_UPDATE);
         message.content = new_content;
-        message.last_update_timestamp = option::some(timestamp::now_seconds());
+        message.last_update_timestamp = timestamp::now_seconds();
 
         event::emit(UpdateMessageEvent {
             message_obj_addr: object::object_address(&message_obj),
@@ -70,11 +70,13 @@ module message_board_addr::message_board {
 
     #[view]
     /// Get the content of a message
-    public fun get_message_content(message_obj: Object<Message>): (String, address) acquires Message {
+    public fun get_message_content(message_obj: Object<Message>): (String, address, u64, u64) acquires Message {
         let message = borrow_global<Message>(object::object_address(&message_obj));
         (
             message.content,
             message.creator,
+            message.creation_timestamp,
+            message.last_update_timestamp,
         )
     }
 
