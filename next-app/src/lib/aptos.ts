@@ -1,6 +1,6 @@
 import { createSurfClient } from "@thalalabs/surf";
 import { Aptos, AptosConfig, Network } from "@aptos-labs/ts-sdk";
-import { ABI } from "@/abis/message_board_abi";
+import { ABI } from "@/abi/message_board_abi";
 
 export const NETWORK_NAME = Network.TESTNET;
 

@@ -1,4 +1,4 @@
-import { getPostgresClient } from "../utils";
+import { getPostgresClient } from "../lib/utils";
 
 const run = async () => {
   const client = await getPostgresClient();

@@ -10,6 +10,9 @@ echo https://fullnode.$NETWORK.aptoslabs.com/v1/accounts/$CONTRACT_ADDRESS/modul
 
 ABI="export const ABI = $(curl https://fullnode.$NETWORK.aptoslabs.com/v1/accounts/$CONTRACT_ADDRESS/module/$MODULE_NAME | sed -n 's/.*"abi":\({.*}\).*}$/\1/p') as const" 
 
-echo $ABI > ../../next-app/src/abis/${MODULE_NAME}_abi.ts
-echo $ABI > ../../node-scripts/src/abis/${MODULE_NAME}_abi.ts
+mkdir -p ../../next-app/src/lib/abi
+echo $ABI > ../../next-app/src/lib/abi/${MODULE_NAME}_abi.ts
+
+mkdir -p ../../node-scripts/src/lib/abi
+echo $ABI > ../../node-scripts/src/abi/${MODULE_NAME}_abi.ts
 

@@ -22,7 +22,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { TransactionOnExplorer } from "@/components/ExplorerLink";
-import { ABI } from "@/abis/message_board_abi";
+import { ABI } from "@/abi/message_board_abi";
 import { revalidateHome } from "@/app/actions";
 
 const FormSchema = z.object({

@@ -1,4 +1,4 @@
-import { getSurfClient } from "../utils";
+import { getSurfClient } from "../lib/utils";
 
 const run = async () => {
   getSurfClient()
