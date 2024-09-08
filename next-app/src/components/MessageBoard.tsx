@@ -31,7 +31,8 @@ export const MessageBoard = async () => {
         <CardTitle>Message Board</CardTitle>
       </CardHeader>
       <CardContent className="flex flex-wrap gap-4">
-        <DataTable columns={columns} data={messageObjectAddresses} />
+        {/* <DataTable columns={columns} data={messageObjectAddresses} /> */}
+        <DataTable columns={columns} />
       </CardContent>
     </Card>
   );

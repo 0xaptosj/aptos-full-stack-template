@@ -1,26 +1,38 @@
 "use server";
 
-import { FieldDef, sql } from "@vercel/postgres";
+import { sql } from "@vercel/postgres";
 
-import { Message } from "@/lib/type/Message";
+import { MessageBoardColumns } from "@/lib/type/message";
 
 type Props = {
+  page: number;
   limit: number;
-  offset: number;
-  sortedBy: string;
+  sortedBy: "id" | "creation_timestamp";
   order: "ASC" | "DESC";
 };
 
 export const getMessages = async ({
+  page,
   limit,
-  offset,
   sortedBy,
   order,
-}: Props): Promise<{ rows: Message[]; fields: FieldDef[] }> => {
-  const { rows, fields, rowCount } = await sql`
-        SELECT * FROM messages
+}: Props): Promise<{
+  messages: MessageBoardColumns[];
+  totalMessages: number;
+}> => {
+  const { rows } = await sql`
+        SELECT id, creation_timestamp FROM messages
         ORDER BY ${sortedBy} ${order}
-        LIMIT ${limit} OFFSET ${offset};
+        LIMIT ${limit} OFFSET ${(page - 1) * limit};
     `;
-  return { rows: rows as Message[], fields };
+  const messages = rows.map((row) => {
+    return {
+      id: row.id,
+      creation_timestamp: new Date(row.creation_timestamp),
+    };
+  });
+  const { rows: count } = await sql`
+        SELECT COUNT(*) FROM messages;
+    `;
+  return { messages, totalMessages: count[0].count };
 };

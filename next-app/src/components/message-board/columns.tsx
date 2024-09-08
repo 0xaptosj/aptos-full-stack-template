@@ -2,69 +2,31 @@
 
 import { ColumnDef } from "@tanstack/react-table";
 
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import { Button } from "../ui/button";
-import { ObjectOnExplorer } from "../ExplorerLink";
-import { MoreHorizontal } from "lucide-react";
+import { DataTableColumnHeader } from "@/components/message-board/data-table-column-header";
+import { DataTableRowActions } from "@/components/message-board/data-table-row-actions";
+import { MessageBoardColumns } from "@/lib/type/message";
 
-export type Message = {
-  messageObjectAddress: string;
-};
-
-export const columns: ColumnDef<Message>[] = [
+export const columns: ColumnDef<MessageBoardColumns>[] = [
   {
-    accessorKey: "messageObjectAddress",
-    header: "Message Object Address",
-    cell: ({ row }) => (
-      <div className="capitalize">{row.getValue("messageObjectAddress")}</div>
+    accessorKey: "id",
+    header: ({ column }) => (
+      <DataTableColumnHeader column={column} title="Message ID" />
     ),
-    accessorFn: (row) => row.messageObjectAddress,
+    cell: ({ row }) => <div className="w-[80px]">{row.getValue("id")}</div>,
+    enableSorting: true,
+  },
+  {
+    accessorKey: "creation_timestamp",
+    header: ({ column }) => (
+      <DataTableColumnHeader column={column} title="Creation Timestamp" />
+    ),
+    cell: ({ row }) => (
+      <div className="w-[80px]">{row.getValue("creation_timestamp")}</div>
+    ),
+    enableSorting: true,
   },
   {
     id: "actions",
-    enableHiding: false,
-    cell: ({ row }) => {
-      const message = row.original;
-      return (
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="ghost" className="h-8 w-8 p-0">
-              <span className="sr-only">Open menu</span>
-              <MoreHorizontal className="h-4 w-4" />
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end">
-            <DropdownMenuLabel>Actions</DropdownMenuLabel>
-            <DropdownMenuItem
-              onClick={() =>
-                navigator.clipboard.writeText(message.messageObjectAddress)
-              }
-            >
-              Copy message object address
-            </DropdownMenuItem>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem>
-              <ObjectOnExplorer address={message.messageObjectAddress} />
-            </DropdownMenuItem>
-            <DropdownMenuItem>
-              <a
-                href={`/message/${message.messageObjectAddress}`}
-                rel="noreferrer"
-                className="text-blue-600 dark:text-blue-300"
-              >
-                View message content
-              </a>
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
-      );
-    },
+    cell: ({ row }) => <DataTableRowActions row={row} />,
   },
 ];
