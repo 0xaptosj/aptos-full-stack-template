@@ -1,11 +1,11 @@
-import { NETWORK_NAME } from "@/lib/aptos";
+import { NETWORK } from "@/lib/aptos";
 
 export interface TransactionOnExplorerProps {
   hash: string;
 }
 
 export function TransactionOnExplorer({ hash }: TransactionOnExplorerProps) {
-  const explorerLink = `https://explorer.aptoslabs.com/txn/${hash}${`?network=${NETWORK_NAME}`}`;
+  const explorerLink = `https://explorer.aptoslabs.com/txn/${hash}${`?network=${NETWORK}`}`;
   return (
     <>
       View on Explorer:{" "}
@@ -26,7 +26,7 @@ export interface ObjectOnExplorerProps {
 }
 
 export function ObjectOnExplorer({ address }: ObjectOnExplorerProps) {
-  const explorerLink = `https://explorer.aptoslabs.com/object/${address}${`?network=${NETWORK_NAME}`}`;
+  const explorerLink = `https://explorer.aptoslabs.com/object/${address}${`?network=${NETWORK}`}`;
   return (
     <a
       href={explorerLink}

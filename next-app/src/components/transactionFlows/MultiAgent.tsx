@@ -1,6 +1,6 @@
 "use client";
 
-import { aptosClient } from "@/lib/aptos";
+import { getAptosClient } from "@/lib/aptos";
 import {
   Account,
   AccountAuthenticator,
@@ -42,21 +42,22 @@ export function MultiAgent() {
 
     const secondarySigner = Account.generate();
     // TODO: support custom network
-    await aptosClient().fundAccount({
+    await getAptosClient().fundAccount({
       accountAddress: secondarySigner.accountAddress.toString(),
       amount: 100_000_000,
     });
     setSecondarySignerAccount(secondarySigner);
 
-    const transactionToSign = await aptosClient().transaction.build.multiAgent({
-      sender: account.address,
-      secondarySignerAddresses: [secondarySigner.accountAddress],
-      data: {
-        function: "0x1::coin::transfer",
-        typeArguments: [APTOS_COIN],
-        functionArguments: [account.address, 1], // 1 is in Octas
-      },
-    });
+    const transactionToSign =
+      await getAptosClient().transaction.build.multiAgent({
+        sender: account.address,
+        secondarySignerAddresses: [secondarySigner.accountAddress],
+        data: {
+          function: "0x1::coin::transfer",
+          typeArguments: [APTOS_COIN],
+          functionArguments: [account.address, 1], // 1 is in Octas
+        },
+      });
     return transactionToSign;
   };
 

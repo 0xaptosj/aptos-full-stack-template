@@ -1,6 +1,6 @@
 "use client";
 
-import { aptosClient } from "@/lib/aptos";
+import { getAptosClient } from "@/lib/aptos";
 import {
   AccountAddress,
   AccountAuthenticator,
@@ -33,7 +33,7 @@ export function Sponsor() {
     if (!account) {
       throw new Error("no account");
     }
-    const transactionToSign = await aptosClient().transaction.build.simple({
+    const transactionToSign = await getAptosClient().transaction.build.simple({
       sender: account.address,
       withFeePayer: true,
       data: {

@@ -2,18 +2,14 @@
 
 import * as React from "react";
 import {
-  ColumnDef,
-  ColumnFiltersState,
-  SortingState,
-  VisibilityState,
-  flexRender,
+  ColumnDef, SortingState, flexRender,
   getCoreRowModel,
   getFacetedRowModel,
   getFacetedUniqueValues,
   getFilteredRowModel,
   getPaginationRowModel,
   getSortedRowModel,
-  useReactTable,
+  useReactTable
 } from "@tanstack/react-table";
 
 import {
@@ -73,14 +69,17 @@ export function DataTable<TData, TValue>({
       sorting,
       pagination,
     },
+    pageCount: Math.ceil(totalItems / pageSize),
     enableRowSelection: true,
     onSortingChange: setSorting,
+    onPaginationChange: setPagination,
     getCoreRowModel: getCoreRowModel(),
     getFilteredRowModel: getFilteredRowModel(),
     getPaginationRowModel: getPaginationRowModel(),
     getSortedRowModel: getSortedRowModel(),
     getFacetedRowModel: getFacetedRowModel(),
     getFacetedUniqueValues: getFacetedUniqueValues(),
+    manualPagination: true,
   });
 
   return (
@@ -135,7 +134,7 @@ export function DataTable<TData, TValue>({
           </TableBody>
         </Table>
       </div>
-      <DataTablePagin ation table={table} totalItems={totalItems} />
+      <DataTablePagination table={table} totalItems={totalItems} />
     </div>
   );
 }

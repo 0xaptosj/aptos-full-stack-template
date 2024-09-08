@@ -3,9 +3,11 @@ import { createSurfClient } from "@thalalabs/surf";
 
 import { ABI } from "@/lib/abi/message_board_abi";
 
+export const NETWORK = Network.TESTNET;
+
 const APTOS_CLIENT = new Aptos(
   new AptosConfig({
-    network: Network.TESTNET,
+    network: NETWORK,
   })
 );
 

@@ -1,6 +1,6 @@
 "use client";
 
-import { aptosClient } from "@/lib/aptos";
+import { getAptosClient } from "@/lib/aptos";
 import { useWallet } from "@aptos-labs/wallet-adapter-react";
 import { Button } from "../ui/button";
 import { Card, CardHeader, CardTitle, CardContent } from "../ui/card";
@@ -55,7 +55,7 @@ export function SingleSigner() {
           functionArguments: [account.address, 1], // 1 is in Octas
         },
       });
-      await aptosClient().waitForTransaction({
+      await getAptosClient().waitForTransaction({
         transactionHash: response.hash,
       });
       toast({
@@ -71,14 +71,16 @@ export function SingleSigner() {
     if (!account) return;
 
     try {
-      const transactionToSign = await aptosClient().transaction.build.simple({
-        sender: account.address,
-        data: {
-          function: "0x1::coin::transfer",
-          typeArguments: [APTOS_COIN],
-          functionArguments: [account.address, 1], // 1 is in Octas
-        },
-      });
+      const transactionToSign = await getAptosClient().transaction.build.simple(
+        {
+          sender: account.address,
+          data: {
+            function: "0x1::coin::transfer",
+            typeArguments: [APTOS_COIN],
+            functionArguments: [account.address, 1], // 1 is in Octas
+          },
+        }
+      );
       const response = await signTransaction(transactionToSign);
       toast({
         title: "Success",
