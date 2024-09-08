@@ -10,6 +10,8 @@ server_config:
     auth_token: "auth_token_you_can_get_from_aptos_api_gateway"
     request_name_header: "events-processor"
   db_config:
+    # do not include the ?sslmode=require in the connection string, Use the native TLS implementation in rust
+    # don't know why it's not working with the sslmode=require
     postgres_connection_string: "postgresql://username:@localhost:5432/example-indexer"
     # we set db_pool_size to a lower number on cloud because we use a free plan
     # see limitation on vercel docs https://vercel.com/docs/storage/vercel-postgres/faq

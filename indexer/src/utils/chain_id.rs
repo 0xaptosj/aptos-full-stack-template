@@ -9,9 +9,16 @@ use tracing::info;
 /// Verify the chain id from GRPC against the database.
 pub async fn check_or_update_chain_id(grpc_chain_id: i64, db_pool: ArcDbPool) -> Result<u64> {
     info!("Checking if chain id is correct");
-    let mut conn = db_pool.get().await?;
 
-    let maybe_existing_chain_id = LedgerInfo::get(&mut conn).await?.map(|li| li.chain_id);
+    let mut conn = db_pool
+        .get()
+        .await
+        .expect("Failed to get connection from pool while checking or updating chain id");
+
+    let maybe_existing_chain_id = LedgerInfo::get(&mut conn)
+        .await
+        .expect("Failed to get chain id from db while checking or updating chain id")
+        .map(|li| li.chain_id);
 
     match maybe_existing_chain_id {
         Some(chain_id) => {

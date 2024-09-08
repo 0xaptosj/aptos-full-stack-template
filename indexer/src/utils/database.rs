@@ -56,16 +56,25 @@ fn establish_connection(database_url: &str) -> BoxFuture<ConnectionResult<AsyncP
 
     (async move {
         let (url, cert_path) = parse_and_clean_db_url(database_url);
-        let cert = std::fs::read(cert_path.unwrap()).expect("Could not read certificate");
+        let connector = match cert_path {
+            Some(cert_path) => {
+                let cert = std::fs::read(cert_path).expect("Could not read certificate");
 
-        let cert = Certificate::from_pem(&cert).expect("Could not parse certificate");
-        let connector = TlsConnector::builder()
-            .danger_accept_invalid_certs(true)
-            .add_root_certificate(cert)
-            .build()
-            .expect("Could not build TLS connector");
-        let connector = MakeTlsConnector::new(connector);
-
+                let cert = Certificate::from_pem(&cert).expect("Could not parse certificate");
+                let connector = TlsConnector::builder()
+                    .danger_accept_invalid_certs(true)
+                    .add_root_certificate(cert)
+                    .build()
+                    .expect("Could not build TLS connector");
+                MakeTlsConnector::new(connector)
+            }
+            None => {
+                let connector = TlsConnector::builder()
+                    .build()
+                    .expect("Could not build default TLS connector");
+                MakeTlsConnector::new(connector)
+            }
+        };
         let (client, connection) = tokio_postgres::connect(&url, connector)
             .await
             .expect("Could not connect to database");
@@ -97,18 +106,14 @@ fn parse_and_clean_db_url(url: &str) -> (String, Option<String>) {
 }
 
 pub async fn new_db_pool(database_url: &str, max_pool_size: u32) -> Result<ArcDbPool, PoolError> {
-    let (_url, cert_path) = parse_and_clean_db_url(database_url);
+    let mut config = ManagerConfig::<MyDbConnection>::default();
+    config.custom_setup = Box::new(|conn| Box::pin(establish_connection(conn)));
+    let manager =
+        AsyncDieselConnectionManager::<MyDbConnection>::new_with_config(database_url, config);
 
-    let config = if cert_path.is_some() {
-        let mut config = ManagerConfig::<MyDbConnection>::default();
-        config.custom_setup = Box::new(|conn| Box::pin(establish_connection(conn)));
-        AsyncDieselConnectionManager::<MyDbConnection>::new_with_config(database_url, config)
-    } else {
-        AsyncDieselConnectionManager::<MyDbConnection>::new(database_url)
-    };
     let pool = Pool::builder()
         .max_size(max_pool_size)
-        .build(config)
+        .build(manager)
         .await?;
     Ok(Arc::new(pool))
 }
