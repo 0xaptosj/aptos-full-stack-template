@@ -1,17 +1,16 @@
-import { createSurfClient } from "@thalalabs/surf";
 import { Aptos, AptosConfig, Network } from "@aptos-labs/ts-sdk";
-import { ABI } from "@/abi/message_board_abi";
+import { createSurfClient } from "@thalalabs/surf";
 
-export const NETWORK_NAME = Network.TESTNET;
+import { ABI } from "@/lib/abi/message_board_abi";
 
-export const aptosClient = () => {
-  return TESTNET_CLIENT;
-};
+const APTOS_CLIENT = new Aptos(
+  new AptosConfig({
+    network: Network.TESTNET,
+  })
+);
 
-export const surfClient = () => {
-  return createSurfClient(aptosClient()).useABI(ABI);
-};
+const SURF_CLIENT = createSurfClient(APTOS_CLIENT).useABI(ABI);
 
-// Testnet client
-export const TESTNET_CONFIG = new AptosConfig({ network: Network.TESTNET });
-export const TESTNET_CLIENT = new Aptos(TESTNET_CONFIG);
+export const getAptosClient = () => APTOS_CLIENT;
+
+export const getSurfClient = () => SURF_CLIENT;
