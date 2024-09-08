@@ -20,15 +20,20 @@ export const getMessages = async ({
   messages: MessageBoardColumns[];
   totalMessages: number;
 }> => {
-  const { rows } = await sql`
-        SELECT id, creation_timestamp FROM messages
-        ORDER BY ${sortedBy} ${order}
-        LIMIT ${limit} OFFSET ${(page - 1) * limit};
-    `;
+  const query = `SELECT id, creation_timestamp FROM messages ORDER BY $1 LIMIT $2 OFFSET $3`;
+  console.log("query", query);
+  const { rows } = await sql.query(query, [
+    // vercel has weird error that we cannot use `${sortedBy} ${order}` directly
+    `${sortedBy} ${order}`,
+    limit,
+    (page - 1) * limit,
+  ]);
   const messages = rows.map((row) => {
     return {
       id: row.id,
-      creation_timestamp: new Date(row.creation_timestamp),
+      creation_timestamp: new Date(
+        row.creation_timestamp * 1000
+      ).toLocaleString(),
     };
   });
   const { rows: count } = await sql`

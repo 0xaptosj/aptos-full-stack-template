@@ -2,14 +2,16 @@
 
 import * as React from "react";
 import {
-  ColumnDef, SortingState, flexRender,
+  ColumnDef,
+  SortingState,
+  flexRender,
   getCoreRowModel,
   getFacetedRowModel,
   getFacetedUniqueValues,
   getFilteredRowModel,
   getPaginationRowModel,
   getSortedRowModel,
-  useReactTable
+  useReactTable,
 } from "@tanstack/react-table";
 
 import {
@@ -33,7 +35,9 @@ export function DataTable<TData, TValue>({
 }: DataTableProps<TData, TValue>) {
   const [data, setData] = React.useState<TData[]>([]);
   const [totalItems, setTotalItems] = React.useState(0);
-  const [sorting, setSorting] = React.useState<SortingState>([]);
+  const [sorting, setSorting] = React.useState<SortingState>([
+    { id: "id", desc: false },
+  ]);
   const [{ pageIndex, pageSize }, setPagination] = React.useState({
     pageIndex: 0,
     pageSize: 10,

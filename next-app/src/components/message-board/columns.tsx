@@ -21,7 +21,7 @@ export const columns: ColumnDef<MessageBoardColumns>[] = [
       <DataTableColumnHeader column={column} title="Creation Timestamp" />
     ),
     cell: ({ row }) => (
-      <div className="w-[80px]">{row.getValue("creation_timestamp")}</div>
+      <div className="w-[160px]">{row.getValue("creation_timestamp")}</div>
     ),
     enableSorting: true,
   },

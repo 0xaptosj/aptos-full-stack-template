@@ -8,7 +8,7 @@ export const MessageBoard = async () => {
       <CardHeader>
         <CardTitle>Message Board</CardTitle>
       </CardHeader>
-      <CardContent className="flex flex-wrap gap-4">
+      <CardContent className="h-full flex-1 flex-col space-y-8 p-8 flex">
         <DataTable columns={columns} />
       </CardContent>
     </Card>

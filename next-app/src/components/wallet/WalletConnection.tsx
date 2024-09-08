@@ -1,11 +1,8 @@
 import { DisplayValue, LabelValueGrid } from "@/components/LabelValueGrid";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Label } from "@/components/ui/label";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Network } from "@aptos-labs/ts-sdk";
 import {
   AccountInfo,
-  AptosChangeNetworkOutput,
   NetworkInfo,
   WalletInfo,
   isAptosNetwork,
@@ -16,14 +13,12 @@ interface WalletConnectionProps {
   account: AccountInfo | null;
   network: NetworkInfo | null;
   wallet: WalletInfo | null;
-  changeNetwork: (network: Network) => Promise<AptosChangeNetworkOutput>;
 }
 
 export const WalletConnection = ({
   account,
   network,
   wallet,
-  changeNetwork,
 }: WalletConnectionProps) => {
   const isValidNetworkName = () => {
     if (isAptosNetwork(network)) {
@@ -156,36 +151,6 @@ export const WalletConnection = ({
               },
             ]}
           />
-        </div>
-
-        <div className="flex flex-col gap-6">
-          <h4 className="text-lg font-medium">Change Network</h4>
-          <RadioGroup
-            value={network?.name}
-            orientation="horizontal"
-            className="flex gap-6"
-            onValueChange={(value: Network) => changeNetwork(value)}
-            disabled={!isNetworkChangeSupported}
-          >
-            <div className="flex items-center space-x-2">
-              <RadioGroupItem value={Network.DEVNET} id="devnet-radio" />
-              <Label htmlFor="devnet-radio">Devnet</Label>
-            </div>
-            <div className="flex items-center space-x-2">
-              <RadioGroupItem value={Network.TESTNET} id="testnet-radio" />
-              <Label htmlFor="testnet-radio">Testnet</Label>
-            </div>
-            <div className="flex items-center space-x-2">
-              <RadioGroupItem value={Network.MAINNET} id="mainnet-radio" />
-              <Label htmlFor="mainnet-radio">Mainnet</Label>
-            </div>
-          </RadioGroup>
-          {!isNetworkChangeSupported && (
-            <div className="text-sm text-red-600 dark:text-red-400">
-              * {wallet?.name ?? "This wallet"} does not support network change
-              requests
-            </div>
-          )}
         </div>
       </CardContent>
     </Card>

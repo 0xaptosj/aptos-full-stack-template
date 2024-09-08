@@ -6,18 +6,13 @@ import { WalletSelection } from "@/components/wallet/WalletSelection";
 import { WalletConnection } from "@/components/wallet/WalletConnection";
 
 export const Wallet = () => {
-  const { account, connected, network, wallet, changeNetwork } = useWallet();
+  const { account, connected, network, wallet } = useWallet();
 
   return (
     <>
       <WalletSelection />
       {connected && (
-        <WalletConnection
-          account={account}
-          network={network}
-          wallet={wallet}
-          changeNetwork={changeNetwork}
-        />
+        <WalletConnection account={account} network={network} wallet={wallet} />
       )}
     </>
   );

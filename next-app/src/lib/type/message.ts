@@ -19,5 +19,5 @@ export type MessageInUi = {
 
 export type MessageBoardColumns = {
   id: number;
-  creation_timestamp: Date;
+  creation_timestamp: string;
 };
