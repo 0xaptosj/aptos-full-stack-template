@@ -41,6 +41,11 @@ impl EventsProcessor {
         // Merge the starting version from config and the latest processed version from the DB
         let starting_version = get_starting_version(&self.config, self.db_pool.clone()).await?;
 
+        info!(
+            "Starting events processor with starting version: {:?}",
+            starting_version
+        );
+
         // Check and update the ledger chain id to ensure we're indexing the correct chain
         let grpc_chain_id = TransactionStream::new(self.config.transaction_stream_config.clone())
             .await?

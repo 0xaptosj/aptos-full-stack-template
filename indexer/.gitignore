@@ -19,3 +19,4 @@ build
 # Processor config
 local.config.yaml
 cloud.config.yaml
+config.yaml

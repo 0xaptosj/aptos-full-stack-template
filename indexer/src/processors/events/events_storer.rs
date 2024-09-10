@@ -117,12 +117,7 @@ impl Processable for EventsStorer {
         .await;
 
         match create_result {
-            Ok(_) => {
-                info!(
-                    "Create message event version [{}, {}] stored successfully",
-                    events.start_version, events.end_version
-                );
-            }
+            Ok(_) => {}
             Err(e) => {
                 error!("Failed to store create message events: {:?}", e);
                 return Err(ProcessorError::ProcessError {
@@ -141,12 +136,7 @@ impl Processable for EventsStorer {
         .await;
 
         match update_result {
-            Ok(_) => {
-                info!(
-                    "Update message event version [{}, {}] stored successfully",
-                    events.start_version, events.end_version
-                );
-            }
+            Ok(_) => {}
             Err(e) => {
                 error!("Failed to store update message events: {:?}", e);
                 return Err(ProcessorError::ProcessError {

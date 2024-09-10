@@ -59,3 +59,17 @@ You should see the indexer start to index Aptos blockchain events!
 "timestamp":"2024-08-15T01:06:35.257756Z","level":"INFO","message":"Events version [0, 4999] stored successfully","filename":"src/processors/events/events_storer.rs","line_number":75,"threadName":"tokio-runtime-worker","threadId":"ThreadId(10)"
 "timestamp":"2024-08-15T01:06:35.257801Z","level":"INFO","message":"Finished processing events from versions [0, 4999]","filename":"src/processors/events/events_processor.rs","line_number":90,"threadName":"tokio-runtime-worker","threadId":"ThreadId(17)"
 ```
+
+# Running the indexer as a docker container for cloud deployment
+
+Build the docker image.
+
+```sh
+docker build -t indexer .
+```
+
+Run the docker container.
+
+```sh
+docker run -v $(pwd):/usr/src/app -it indexer
+```
