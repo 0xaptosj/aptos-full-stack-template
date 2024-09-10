@@ -9,29 +9,18 @@ pub async fn get_starting_version(
     indexer_processor_config: &IndexerProcessorConfig,
     conn_pool: ArcDbPool,
 ) -> Result<u64> {
-    // If starting_version is set in TransactionStreamConfig, use that
-    if indexer_processor_config
+    let starting_version_from_config = indexer_processor_config
         .transaction_stream_config
         .starting_version
-        .is_some()
-    {
-        return Ok(indexer_processor_config
-            .transaction_stream_config
-            .starting_version
-            .unwrap());
-    }
+        .unwrap_or(0);
 
-    // If it's not set, check if the DB has latest_processed_version set and use that
     let latest_processed_version_from_db =
         get_latest_processed_version_from_db(indexer_processor_config, conn_pool)
             .await
-            .context("Failed to get latest processed version from DB")?;
-    if let Some(latest_processed_version_tracker) = latest_processed_version_from_db {
-        return Ok(latest_processed_version_tracker);
-    }
+            .context("Failed to get latest processed version from DB")?
+            .unwrap_or(0);
 
-    // If latest_processed_version is not stored in DB, return the default 0
-    Ok(0)
+    Ok(starting_version_from_config.max(latest_processed_version_from_db))
 }
 
 /// Gets the start version for the processor. If not found, start from 0.

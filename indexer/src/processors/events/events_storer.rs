@@ -17,7 +17,7 @@ use diesel::{
     query_dsl::methods::FilterDsl,
     BoolExpressionMethods, ExpressionMethods,
 };
-use tracing::{error, info};
+use tracing::error;
 
 /// EventsStorer is a step that inserts events in the database.
 pub struct EventsStorer
