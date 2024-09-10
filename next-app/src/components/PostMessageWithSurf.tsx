@@ -74,7 +74,7 @@ export function PostMessageWithSurf() {
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Create a Message</CardTitle>
+        <CardTitle>Create a new message</CardTitle>
       </CardHeader>
       <CardContent className="flex flex-wrap">
         <Form {...form}>
@@ -96,7 +96,11 @@ export function PostMessageWithSurf() {
                 </FormItem>
               )}
             />
-            <Button type="submit" disabled={!connected} className="w-40 gap-8">
+            <Button
+              type="submit"
+              disabled={!connected}
+              className="w-40 self-start col-span-2"
+            >
               Create
             </Button>
           </form>

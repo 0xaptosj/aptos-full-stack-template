@@ -1,10 +1,8 @@
-"use server";
-
 import { sql } from "@vercel/postgres";
 
 import { MessageBoardColumns } from "@/lib/type/message";
 
-type Props = {
+export type GetMessagesProps = {
   page: number;
   limit: number;
   sortedBy: "id" | "creation_timestamp";
@@ -16,7 +14,7 @@ export const getMessages = async ({
   limit,
   sortedBy,
   order,
-}: Props): Promise<{
+}: GetMessagesProps): Promise<{
   messages: MessageBoardColumns[];
   totalMessages: number;
 }> => {

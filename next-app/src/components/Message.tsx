@@ -1,29 +1,14 @@
-import { surfClient } from "@/lib/aptos";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { LabelValueGrid } from "@/components/LabelValueGrid";
+import { getMessage } from "@/db/getMessage";
+import { NETWORK } from "@/lib/aptos";
 
 interface MessageProps {
-  messageObjectAddress: `0x${string}`;
+  messageId: number;
 }
 
-export async function Message({ messageObjectAddress }: MessageProps) {
-  const [
-    booleanContent,
-    stringContent,
-    numberContent,
-    addressContent,
-    objectContent,
-    vectorContent,
-    optionalBooleanContent,
-    optionalStringContent,
-    optionalNumberContent,
-    optionalAddressContent,
-    optionalObjectContent,
-    optionalVectorContent,
-  ] = await surfClient().view.get_message_content({
-    typeArguments: [],
-    functionArguments: [messageObjectAddress],
-  });
+export async function Message({ messageId }: MessageProps) {
+  const { message } = await getMessage({ messageId });
 
   return (
     <Card>
@@ -35,52 +20,50 @@ export async function Message({ messageObjectAddress }: MessageProps) {
           <LabelValueGrid
             items={[
               {
-                label: "Boolean Content",
-                value: <p>{String(booleanContent)}</p>,
+                label: "ID",
+                value: <p>{message.id}</p>,
               },
               {
-                label: "String Content",
-                value: <p>{stringContent}</p>,
+                label: "Creator address",
+                value: (
+                  <p>
+                    <a
+                      href={`https://explorer.aptoslabs.com/account/${message.creator_addr}?network=${NETWORK}`}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="text-blue-600 dark:text-blue-300"
+                    >
+                      {message.creator_addr}
+                    </a>
+                  </p>
+                ),
               },
               {
-                label: "Number Content",
-                value: <p>{numberContent}</p>,
+                label: "Message object address",
+                value: (
+                  <p>
+                    <a
+                      href={`https://explorer.aptoslabs.com/object/${message.message_obj_addr}?network=${NETWORK}`}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="text-blue-600 dark:text-blue-300"
+                    >
+                      {message.message_obj_addr}
+                    </a>
+                  </p>
+                ),
               },
               {
-                label: "Address Content",
-                value: <p>{addressContent}</p>,
+                label: "Creation timestamp",
+                value: <p>{message.creation_timestamp}</p>,
               },
               {
-                label: "Object Content",
-                value: <p>{JSON.stringify(objectContent)}</p>,
+                label: "Last update timestamp",
+                value: <p>{message.last_update_timestamp}</p>,
               },
               {
-                label: "Vector Content",
-                value: <p>{JSON.stringify(vectorContent)}</p>,
-              },
-              {
-                label: "Optional Boolean Content",
-                value: <p>{String(optionalBooleanContent.vec)}</p>,
-              },
-              {
-                label: "Optional String Content",
-                value: <p>{optionalStringContent.vec}</p>,
-              },
-              {
-                label: "Optional Number Content",
-                value: <p>{optionalNumberContent.vec}</p>,
-              },
-              {
-                label: "Optional Address Content",
-                value: <p>{optionalAddressContent.vec}</p>,
-              },
-              {
-                label: "Optional Object Content",
-                value: <p>{JSON.stringify(optionalObjectContent.vec)}</p>,
-              },
-              {
-                label: "Optional Vector Content",
-                value: <p>{JSON.stringify(optionalVectorContent.vec)}</p>,
+                label: "Content",
+                value: <p>{message.content}</p>,
               },
             ]}
           />

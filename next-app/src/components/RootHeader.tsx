@@ -1,4 +1,5 @@
 import { ThemeToggle } from "@/components/ThemeToggle";
+import { WalletSelector } from "./wallet/WalletSelector";
 
 export const RootHeader = () => {
   return (
@@ -16,7 +17,10 @@ export const RootHeader = () => {
           Source Code
         </a>
       </div>
-      <ThemeToggle />
+      <div className="flex space-x-5">
+        <WalletSelector />
+        <ThemeToggle />
+      </div>
     </div>
   );
 };

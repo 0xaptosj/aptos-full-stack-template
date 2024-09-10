@@ -11,9 +11,9 @@ export type MessageInDb = {
 export type MessageInUi = {
   id: number;
   message_obj_addr: `0x${string}`;
-  creator_addr: string;
-  creation_timestamp: Date;
-  last_update_timestamp: Date;
+  creator_addr: `0x${string}`;
+  creation_timestamp: string;
+  last_update_timestamp: string;
   content: string;
 };
 

@@ -3,16 +3,14 @@
 import { AptosWalletAdapterProvider } from "@aptos-labs/wallet-adapter-react";
 import { PropsWithChildren } from "react";
 import { Network } from "@aptos-labs/ts-sdk";
-import { useAutoConnect } from "./AutoConnectProvider";
 import { useToast } from "../ui/use-toast";
 
 export const WalletProvider = ({ children }: PropsWithChildren) => {
-  const { autoConnect } = useAutoConnect();
   const { toast } = useToast();
 
   return (
     <AptosWalletAdapterProvider
-      autoConnect={autoConnect}
+      autoConnect={true}
       dappConfig={{
         network: Network.TESTNET,
         mizuwallet: {

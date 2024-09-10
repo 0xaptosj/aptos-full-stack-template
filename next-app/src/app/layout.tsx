@@ -7,7 +7,6 @@ import { cn } from "@/lib/utils";
 import type { Metadata } from "next";
 import { Inter as FontSans } from "next/font/google";
 import { PropsWithChildren } from "react";
-import { AutoConnectProvider } from "@/components/providers/AutoConnectProvider";
 import { RootHeader } from "@/components/RootHeader";
 
 const fontSans = FontSans({
@@ -36,15 +35,13 @@ const RootLayout = ({ children }: PropsWithChildren) => {
           enableSystem
           disableTransitionOnChange
         >
-          <AutoConnectProvider>
-            <WalletProvider>
-              <main className="flex flex-col w-full max-w-[1000px] p-6 pb-12 md:px-8 gap-6">
-                <RootHeader />
-                {children}
-                <Toaster />
-              </main>
-            </WalletProvider>
-          </AutoConnectProvider>
+          <WalletProvider>
+            <main className="flex flex-col w-full max-w-[1000px] p-6 pb-12 md:px-8 gap-6">
+              <RootHeader />
+              {children}
+              <Toaster />
+            </main>
+          </WalletProvider>
         </ThemeProvider>
       </body>
     </html>

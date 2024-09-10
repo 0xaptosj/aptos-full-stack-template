@@ -24,7 +24,7 @@ import {
 } from "@/components/ui/table";
 
 import { DataTablePagination } from "@/components/message-board/data-table-pagination";
-import { getMessages } from "@/actions/getMessages";
+import { getMessagesOnServer } from "@/app/actions";
 
 interface DataTableProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[];
@@ -44,7 +44,7 @@ export function DataTable<TData, TValue>({
   });
 
   const fetchData = React.useCallback(async () => {
-    const { messages, totalMessages } = await getMessages({
+    const { messages, totalMessages } = await getMessagesOnServer({
       page: pageIndex + 1,
       limit: pageSize,
       sortedBy: sorting[0]?.id as "id" | "creation_timestamp",

@@ -3,9 +3,9 @@ import { Message } from "@/components/Message";
 export default function MessagePage({
   params,
 }: {
-  params: { messageObjectAddress: `0x${string}` };
+  params: { messageId: number };
 }) {
-  const { messageObjectAddress } = params;
+  const { messageId } = params;
 
-  return <Message messageObjectAddress={messageObjectAddress} />;
+  return <Message messageId={messageId} />;
 }
