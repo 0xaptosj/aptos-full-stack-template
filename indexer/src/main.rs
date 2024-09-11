@@ -1,11 +1,24 @@
 use anyhow::Result;
 use aptos_indexer_processor_sdk_server_framework::ServerArgs;
 use clap::Parser;
-use indexer::config::indexer_processor_config::IndexerProcessorConfig;
+use indexer::{
+    config::indexer_processor_config::IndexerProcessorConfig,
+    server::{self, HealthServerConfig},
+};
 
 #[cfg(unix)]
 #[global_allocator]
 static ALLOC: jemallocator::Jemalloc = jemallocator::Jemalloc;
+
+async fn run_health_server() -> Result<()> {
+    server::run(HealthServerConfig::default()).await
+}
+
+async fn run_indexer() -> Result<()> {
+    ServerArgs::parse()
+        .run::<IndexerProcessorConfig>(tokio::runtime::Handle::current())
+        .await
+}
 
 fn main() -> Result<()> {
     let num_cpus = num_cpus::get();
@@ -19,8 +32,7 @@ fn main() -> Result<()> {
         .build()
         .unwrap()
         .block_on(async {
-            let args = ServerArgs::parse();
-            args.run::<IndexerProcessorConfig>(tokio::runtime::Handle::current())
-                .await
+            tokio::try_join!(run_health_server(), run_indexer())?;
+            Ok(())
         })
 }

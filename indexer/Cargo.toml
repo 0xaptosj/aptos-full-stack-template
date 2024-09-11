@@ -42,6 +42,7 @@ jemallocator = { version = "0.5.0", features = [
     "unprefixed_malloc_on_supported_platforms",
 ] }
 num_cpus = "1.16.0"
+poem = { version = "3.1.0", features = ["anyhow"] }
 rayon = "1.10.0"
 serde = { version = "1.0.193", features = ["derive", "rc"] }
 serde_json = { version = "1.0.81", features = ["preserve_order"] }

@@ -8,6 +8,8 @@ We use the term indexer and processor interchangeably.
 
 **Note: all commends below need to be run in the current indexer directory instead of root directory.**
 
+## Steps
+
 Drop the DB if exists. You cannot do this if you are using a cloud provider. Follow the revert migration command below instead.
 
 ```sh
@@ -62,6 +64,19 @@ You should see the indexer start to index Aptos blockchain events!
 
 # Running the indexer as a docker container for cloud deployment
 
+I'm using GCP Cloud Run and Artifact Registry.
+
+You can learn more about publishing to Artifact Registry on their docs:
+
+- https://cloud.google.com/artifact-registry/docs/docker/pushing-and-pulling#pushing
+- https://cloud.google.com/artifact-registry/docs/docker/store-docker-container-images
+
+And deploying to Cloud Run:
+
+- https://cloud.google.com/run/docs/quickstarts/deploy-container
+
+## Build the docker image and run the container locally
+
 Build the docker image.
 
 ```sh
@@ -71,5 +86,31 @@ docker build -t indexer .
 Run the docker container.
 
 ```sh
-docker run -v $(pwd):/usr/src/app -it indexer
+# docker run -v $(pwd):/usr/src/app -p 8080:8080 -it indexer
+docker run -p 8080:8080 -it indexer
 ```
+
+## Push the docker image to Artifact Registry
+
+Tag the docker image.
+
+```sh
+docker tag indexer us-west2-docker.pkg.dev/indexer-sdk-demo/indexer-sdk-demo/indexer
+```
+
+Login to google cloud
+
+```sh
+gcloud auth login
+```
+
+Push the docker image to the container registry.
+
+```sh
+docker push us-west2-docker.pkg.dev/indexer-sdk-demo/indexer-sdk-demo/indexer
+```
+
+
+
+gcloud config set project indexer-sdk-demo
+gcloud builds submit .
