@@ -10,7 +10,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { MessageBoardColumns } from "@/lib/type/Message";
+import { MessageBoardColumns } from "@/lib/type/message";
 
 interface DataTableRowActionsProps {
   row: Row<MessageBoardColumns>;
