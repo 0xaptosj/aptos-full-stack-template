@@ -1,0 +1,5 @@
+# need to upload config to cloud to build image on cloud
+
+!config.yaml
+
+target

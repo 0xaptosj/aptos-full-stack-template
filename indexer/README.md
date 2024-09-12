@@ -113,4 +113,11 @@ docker push us-west2-docker.pkg.dev/indexer-sdk-demo/indexer-sdk-demo/indexer
 
 
 gcloud config set project indexer-sdk-demo
-gcloud builds submit .
+<!-- gcloud builds submit . -->
+gcloud builds submit --tag gcr.io/indexer-sdk-demo/indexer
+
+
+gcloud run deploy $indexer \
+    --image gcr.io/indexer-sdk-demo/indexer:latest \
+    --region us-west2 --platform managed \
+    --allow-unauthenticated

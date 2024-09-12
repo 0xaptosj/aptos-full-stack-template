@@ -11,14 +11,17 @@ RUN apt-get update && apt-get install -y \
 # Set the working directory inside the container
 WORKDIR /usr/src/app
 
-# Copy the Cargo.toml and Cargo.lock files
+# Copy files
+# COPY Cargo.toml Cargo.lock config.yaml ./
 COPY Cargo.toml Cargo.lock ./
 COPY .cargo .cargo
-
-# Copy the actual source code
 COPY src src
 
-# Build the project
+# Add the target for x86_64 (Cloud Run architecture)
+# RUN rustup target add x86_64-unknown-linux-gnu
+
+# Build the project for x86_64 architecture
+# RUN cargo build --release --target=x86_64-unknown-linux-gnu
 RUN cargo build --release
 
 # Use a minimal base image to run the binary
@@ -39,13 +42,11 @@ RUN apt-get update && apt-get install -y \
 WORKDIR /usr/src/app
 
 # Copy the compiled binary from the builder image
+# COPY --from=builder /usr/src/app/target/x86_64-unknown-linux-gnu/release/indexer .
 COPY --from=builder /usr/src/app/target/release/indexer .
-
-# Copy the config file
-COPY config.yaml .
 
 # Expose the port your application is using
 EXPOSE 8080
 
 # Set the command to run the application
-CMD ["./indexer", "-c", "config.yaml"]
+CMD ["./indexer", "-c", "config"]

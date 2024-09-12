@@ -51,7 +51,7 @@ pub struct DbConfig {
 
 impl DbConfig {
     pub const fn default_db_pool_size() -> u32 {
-        150
+        50
     }
 }
 
