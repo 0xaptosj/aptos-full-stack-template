@@ -62,7 +62,7 @@ You should see the indexer start to index Aptos blockchain events!
 "timestamp":"2024-08-15T01:06:35.257801Z","level":"INFO","message":"Finished processing events from versions [0, 4999]","filename":"src/processors/events/events_processor.rs","line_number":90,"threadName":"tokio-runtime-worker","threadId":"ThreadId(17)"
 ```
 
-# Running the indexer as a docker container for cloud deployment
+# Get ready for cloud deployment
 
 I'm using GCP Cloud Run and Artifact Registry.
 
@@ -75,22 +75,21 @@ And deploying to Cloud Run:
 
 - https://cloud.google.com/run/docs/quickstarts/deploy-container
 
-## Build the docker image and run the container locally
+## Build the docker image locally and run the container locally
 
-Build the docker image.
+Build the docker image targeting linux/amd64 because eventually, we will push the image to Artifact Registry and deploy it to Cloud Run.
 
 ```sh
-docker build -t indexer .
+docker build --platform linux/amd64 -t indexer .
 ```
 
-Run the docker container.
+Run the docker container locally. Mac supports linux/amd64 emulation so you can run the container locally.
 
 ```sh
-# docker run -v $(pwd):/usr/src/app -p 8080:8080 -it indexer
 docker run -p 8080:8080 -it indexer
 ```
 
-## Push the docker image to Artifact Registry
+## Push the locally build docker image to Artifact Registry
 
 Tag the docker image.
 
@@ -110,14 +109,12 @@ Push the docker image to the container registry.
 docker push us-west2-docker.pkg.dev/indexer-sdk-demo/indexer-sdk-demo/indexer
 ```
 
+## Upload the config.yaml file to Secret Manager
 
+Go to secret manager and create a new secret with the content of the config.yaml file.
 
-gcloud config set project indexer-sdk-demo
-<!-- gcloud builds submit . -->
-gcloud builds submit --tag gcr.io/indexer-sdk-demo/indexer
+## Run the container on Cloud Run
 
+Go to cloud run dashboard, create a new service, and select the container image from Artifact Registry, also add a volume to ready the config.yaml file from Secret Manager, then mount the volume to the container.
 
-gcloud run deploy $indexer \
-    --image gcr.io/indexer-sdk-demo/indexer:latest \
-    --region us-west2 --platform managed \
-    --allow-unauthenticated
+**NOTE**: always allocate cpu so it always runs instead of only run when there is traffic. Min and max instances should be 1.

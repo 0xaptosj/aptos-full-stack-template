@@ -1,6 +1,5 @@
 # Use the official Rust image to build the binary
 FROM rust:latest AS builder
-# FROM gcr.io/gcp-runtimes/rust:1.75 AS builder
 
 # Install the necessary system dependencies
 RUN apt-get update && apt-get install -y \
@@ -12,22 +11,17 @@ RUN apt-get update && apt-get install -y \
 WORKDIR /usr/src/app
 
 # Copy files
-# COPY Cargo.toml Cargo.lock config.yaml ./
 COPY Cargo.toml Cargo.lock ./
 COPY .cargo .cargo
 COPY src src
 
 # Add the target for x86_64 (Cloud Run architecture)
-# RUN rustup target add x86_64-unknown-linux-gnu
+RUN rustup target add x86_64-unknown-linux-gnu
 
 # Build the project for x86_64 architecture
-# RUN cargo build --release --target=x86_64-unknown-linux-gnu
-RUN cargo build --release
+RUN cargo build --release --target=x86_64-unknown-linux-gnu
 
 # Use a minimal base image to run the binary
-# FROM debian:bullseye-slim
-# FROM ubuntu:latest
-# FROM gcr.io/distroless/base-debian12
 FROM debian:12
 
 # Install runtime dependencies
@@ -42,11 +36,13 @@ RUN apt-get update && apt-get install -y \
 WORKDIR /usr/src/app
 
 # Copy the compiled binary from the builder image
-# COPY --from=builder /usr/src/app/target/x86_64-unknown-linux-gnu/release/indexer .
-COPY --from=builder /usr/src/app/target/release/indexer .
+COPY --from=builder /usr/src/app/target/x86_64-unknown-linux-gnu/release/indexer .
+
+# Copy the configuration file
+COPY config.yaml /secrets/config
 
 # Expose the port your application is using
 EXPOSE 8080
 
 # Set the command to run the application
-CMD ["./indexer", "-c", "config"]
+CMD ["./indexer", "-c", "/secrets/config"]
