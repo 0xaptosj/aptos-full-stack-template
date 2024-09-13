@@ -9,6 +9,7 @@ import { Inter as FontSans } from "next/font/google";
 import { PropsWithChildren } from "react";
 import { RootHeader } from "@/components/RootHeader";
 import { WrongNetworkAlert } from "@/components/WrongNetworkAlert";
+import { QueryProvider } from "@/components/providers/QueryProvider";
 
 const fontSans = FontSans({
   subsets: ["latin"],
@@ -36,14 +37,16 @@ const RootLayout = ({ children }: PropsWithChildren) => {
           enableSystem
           disableTransitionOnChange
         >
-          <WalletProvider>
-            <main className="flex flex-col w-full max-w-[1000px] p-6 pb-12 md:px-8 gap-6">
-              <WrongNetworkAlert />
-              <RootHeader />
-              {children}
-              <Toaster />
-            </main>
-          </WalletProvider>
+          <QueryProvider>
+            <WalletProvider>
+              <main className="flex flex-col w-full max-w-[1000px] p-6 pb-12 md:px-8 gap-6">
+                <WrongNetworkAlert />
+                <RootHeader />
+                {children}
+                <Toaster />
+              </main>
+            </WalletProvider>
+          </QueryProvider>
         </ThemeProvider>
       </body>
     </html>

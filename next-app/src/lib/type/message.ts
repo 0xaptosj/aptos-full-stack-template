@@ -17,5 +17,5 @@ export type MessageInUi = {
 
 export type MessageBoardColumns = {
   message_obj_addr: `0x${string}`;
-  creation_timestamp: string;
+  creation_timestamp: number;
 };

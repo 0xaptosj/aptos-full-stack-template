@@ -1,14 +1,9 @@
 "use server";
 
-import { revalidatePath } from "next/cache";
-
+import { getLastSuccessVersion } from "@/db/getLastSuccessVersion";
 import { GetMessageProps, getMessage } from "@/db/getMessage";
 import { GetMessagesProps, getMessages } from "@/db/getMessages";
 import { MessageBoardColumns, MessageInUi } from "@/lib/type/message";
-
-export async function revalidateHome() {
-  revalidatePath("/");
-}
 
 export const getMessagesOnServer = async ({
   page,
@@ -28,4 +23,8 @@ export const getMessageOnServer = async ({
   message: MessageInUi;
 }> => {
   return getMessage({ messageObjAddr });
+};
+
+export const getLastVersionOnServer = async (): Promise<number> => {
+  return getLastSuccessVersion();
 };

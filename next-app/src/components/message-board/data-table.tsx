@@ -25,6 +25,7 @@ import {
 
 import { DataTablePagination } from "@/components/message-board/data-table-pagination";
 import { getMessagesOnServer } from "@/app/actions";
+import { useQuery } from "@tanstack/react-query";
 
 interface DataTableProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[];
@@ -33,30 +34,27 @@ interface DataTableProps<TData, TValue> {
 export function DataTable<TData, TValue>({
   columns,
 }: DataTableProps<TData, TValue>) {
-  const [data, setData] = React.useState<TData[]>([]);
-  const [totalItems, setTotalItems] = React.useState(0);
   const [sorting, setSorting] = React.useState<SortingState>([
     { id: "creation_timestamp", desc: true },
   ]);
   const [{ pageIndex, pageSize }, setPagination] = React.useState({
     pageIndex: 0,
-    pageSize: 10,
+    pageSize: 5,
   });
 
-  const fetchData = React.useCallback(async () => {
-    const { messages, totalMessages } = await getMessagesOnServer({
+  const fetchData = async () => {
+    return await getMessagesOnServer({
       page: pageIndex + 1,
       limit: pageSize,
       sortedBy: sorting[0]?.id as "creation_timestamp",
       order: sorting[0]?.desc ? "DESC" : "ASC",
     });
-    setData(messages as TData[]);
-    setTotalItems(totalMessages);
-  }, [pageIndex, pageSize, sorting]);
+  };
 
-  React.useEffect(() => {
-    fetchData();
-  }, [fetchData]);
+  const { data, isLoading, isError, error } = useQuery({
+    queryKey: ["messages", pageIndex, pageSize, sorting],
+    queryFn: fetchData,
+  });
 
   const pagination = React.useMemo(
     () => ({
@@ -67,13 +65,13 @@ export function DataTable<TData, TValue>({
   );
 
   const table = useReactTable({
-    data,
+    data: (data?.messages as TData[]) || [],
     columns,
     state: {
       sorting,
       pagination,
     },
-    pageCount: Math.ceil(totalItems / pageSize),
+    pageCount: Math.ceil(data?.totalMessages || 0 / pageSize),
     enableRowSelection: true,
     onSortingChange: setSorting,
     onPaginationChange: setPagination,
@@ -85,6 +83,16 @@ export function DataTable<TData, TValue>({
     getFacetedUniqueValues: getFacetedUniqueValues(),
     manualPagination: true,
   });
+
+  if (isLoading) {
+    return <div>Loading...</div>;
+  }
+
+  if (isError) {
+    return <div>Error: {error.message}</div>;
+  }
+
+  console.log("data", data);
 
   return (
     <div className="space-y-4">
@@ -138,7 +146,10 @@ export function DataTable<TData, TValue>({
           </TableBody>
         </Table>
       </div>
-      <DataTablePagination table={table} totalItems={totalItems} />
+      <DataTablePagination
+        table={table}
+        totalItems={data?.totalMessages || 0}
+      />
     </div>
   );
 }

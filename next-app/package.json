@@ -23,6 +23,8 @@
     "@radix-ui/react-slot": "^1.1.0",
     "@radix-ui/react-switch": "^1.0.3",
     "@radix-ui/react-toast": "^1.1.5",
+    "@radix-ui/react-tooltip": "^1.1.2",
+    "@tanstack/react-query": "^5.56.2",
     "@tanstack/react-table": "^8.19.2",
     "@thalalabs/surf": "1.7.3",
     "@vercel/postgres": "^0.9.0",

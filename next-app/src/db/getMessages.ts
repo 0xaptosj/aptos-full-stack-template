@@ -18,19 +18,14 @@ export const getMessages = async ({
   messages: MessageBoardColumns[];
   totalMessages: number;
 }> => {
-  const query = `SELECT message_obj_addr, creation_timestamp FROM messages ORDER BY $1 LIMIT $2 OFFSET $3`;
-  const { rows } = await sql.query(query, [
-    // vercel has weird error that we cannot use `${sortedBy} ${order}` directly
-    `${sortedBy} ${order}`,
-    limit,
-    (page - 1) * limit,
-  ]);
+  // vercel doesn't allow $1 $2 in the query string, so we do it like this
+  // we checked the type above to prevent sql injection
+  const query = `SELECT message_obj_addr, creation_timestamp FROM messages ORDER BY ${sortedBy} ${order} LIMIT $1 OFFSET $2`;
+  const { rows } = await sql.query(query, [limit, (page - 1) * limit]);
   const messages = rows.map((row) => {
     return {
       message_obj_addr: row.message_obj_addr,
-      creation_timestamp: new Date(
-        row.creation_timestamp * 1000
-      ).toLocaleString(),
+      creation_timestamp: row.creation_timestamp,
     };
   });
   const { rows: count } = await sql`

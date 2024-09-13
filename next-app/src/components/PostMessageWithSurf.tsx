@@ -22,7 +22,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { TransactionOnExplorer } from "@/components/ExplorerLink";
 import { ABI } from "@/lib/abi/message_board_abi";
-import { revalidateHome } from "@/app/actions";
+import { useQueryClient } from "@tanstack/react-query";
 
 const FormSchema = z.object({
   stringContent: z.string(),
@@ -30,11 +30,9 @@ const FormSchema = z.object({
 
 export function PostMessageWithSurf() {
   const { toast } = useToast();
-  const { connected, account, network } = useWallet();
+  const { connected, account } = useWallet();
   const { client: walletClient } = useWalletClient();
-
-  account?.address;
-  account?.publicKey;
+  const queryClient = useQueryClient();
 
   const form = useForm<z.infer<typeof FormSchema>>({
     resolver: zodResolver(FormSchema),
@@ -51,24 +49,36 @@ export function PostMessageWithSurf() {
       return;
     }
 
-    try {
-      const committedTransaction = await walletClient
-        ?.useABI(ABI)
-        .create_message({
-          type_arguments: [],
-          arguments: [data.stringContent],
+    walletClient
+      .useABI(ABI)
+      .create_message({
+        type_arguments: [],
+        arguments: [data.stringContent],
+      })
+      .then((committedTransaction) => {
+        return getAptosClient().waitForTransaction({
+          transactionHash: committedTransaction.hash,
         });
-      const executedTransaction = await getAptosClient().waitForTransaction({
-        transactionHash: committedTransaction.hash,
+      })
+      .then((executedTransaction) => {
+        toast({
+          title: "Success",
+          description: (
+            <TransactionOnExplorer hash={executedTransaction.hash} />
+          ),
+        });
+        return new Promise((resolve) => setTimeout(resolve, 3000));
+      })
+      .then(() => {
+        return queryClient.invalidateQueries({ queryKey: ["messages"] });
+      })
+      .catch((error) => {
+        console.error("Error", error);
+        toast({
+          title: "Error",
+          description: "Failed to create a message",
+        });
       });
-      toast({
-        title: "Success",
-        description: <TransactionOnExplorer hash={executedTransaction.hash} />,
-      });
-      await revalidateHome();
-    } catch (error) {
-      console.error(error);
-    }
   };
 
   return (
