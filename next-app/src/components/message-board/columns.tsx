@@ -1,6 +1,7 @@
 "use client";
 
 import { ColumnDef } from "@tanstack/react-table";
+import { truncateAddress } from "@aptos-labs/wallet-adapter-react";
 
 import { DataTableColumnHeader } from "@/components/message-board/data-table-column-header";
 import { DataTableRowActions } from "@/components/message-board/data-table-row-actions";
@@ -8,12 +9,16 @@ import { MessageBoardColumns } from "@/lib/type/message";
 
 export const columns: ColumnDef<MessageBoardColumns>[] = [
   {
-    accessorKey: "id",
+    accessorKey: "message_obj_addr",
     header: ({ column }) => (
-      <DataTableColumnHeader column={column} title="Message ID" />
+      <DataTableColumnHeader column={column} title="Message Object Address" />
     ),
-    cell: ({ row }) => <div className="w-[80px]">{row.getValue("id")}</div>,
-    enableSorting: true,
+    cell: ({ row }) => (
+      <div className="w-[80px]">
+        {truncateAddress(row.getValue("message_obj_addr"))}
+      </div>
+    ),
+    enableSorting: false,
   },
   {
     accessorKey: "creation_timestamp",

@@ -23,9 +23,9 @@ export const getMessagesOnServer = async ({
 };
 
 export const getMessageOnServer = async ({
-  messageId,
+  messageObjAddr,
 }: GetMessageProps): Promise<{
   message: MessageInUi;
 }> => {
-  return getMessage({ messageId });
+  return getMessage({ messageObjAddr });
 };

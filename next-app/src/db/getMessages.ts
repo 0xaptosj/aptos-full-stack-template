@@ -5,7 +5,7 @@ import { MessageBoardColumns } from "@/lib/type/message";
 export type GetMessagesProps = {
   page: number;
   limit: number;
-  sortedBy: "id" | "creation_timestamp";
+  sortedBy: "creation_timestamp";
   order: "ASC" | "DESC";
 };
 
@@ -18,8 +18,7 @@ export const getMessages = async ({
   messages: MessageBoardColumns[];
   totalMessages: number;
 }> => {
-  const query = `SELECT id, creation_timestamp FROM messages ORDER BY $1 LIMIT $2 OFFSET $3`;
-  console.log("query", query);
+  const query = `SELECT message_obj_addr, creation_timestamp FROM messages ORDER BY $1 LIMIT $2 OFFSET $3`;
   const { rows } = await sql.query(query, [
     // vercel has weird error that we cannot use `${sortedBy} ${order}` directly
     `${sortedBy} ${order}`,
@@ -28,7 +27,7 @@ export const getMessages = async ({
   ]);
   const messages = rows.map((row) => {
     return {
-      id: row.id,
+      message_obj_addr: row.message_obj_addr,
       creation_timestamp: new Date(
         row.creation_timestamp * 1000
       ).toLocaleString(),

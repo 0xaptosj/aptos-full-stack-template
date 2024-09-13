@@ -17,7 +17,7 @@ interface DataTableRowActionsProps {
 }
 
 export function DataTableRowActions({ row }: DataTableRowActionsProps) {
-  const messageDetailPage = `/message/${row.original.id}`;
+  const messageDetailPage = `/message/${row.original.message_obj_addr}`;
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>

@@ -7,8 +7,7 @@ diesel::table! {
 }
 
 diesel::table! {
-    messages (id) {
-        id -> Int8,
+    messages (message_obj_addr) {
         #[max_length = 300]
         message_obj_addr -> Varchar,
         #[max_length = 300]

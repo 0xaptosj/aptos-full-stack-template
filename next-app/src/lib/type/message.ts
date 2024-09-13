@@ -1,5 +1,4 @@
 export type MessageInDb = {
-  id: number;
   message_obj_addr: string;
   creator_addr: string;
   creation_timestamp: number;
@@ -9,7 +8,6 @@ export type MessageInDb = {
 };
 
 export type MessageInUi = {
-  id: number;
   message_obj_addr: `0x${string}`;
   creator_addr: `0x${string}`;
   creation_timestamp: string;
@@ -18,6 +16,6 @@ export type MessageInUi = {
 };
 
 export type MessageBoardColumns = {
-  id: number;
+  message_obj_addr: `0x${string}`;
   creation_timestamp: string;
 };

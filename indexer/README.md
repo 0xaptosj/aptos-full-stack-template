@@ -43,9 +43,9 @@ In case you want to revert all migrations. On cloud provider, you cannot drop da
 
 ```sh
 diesel migration revert \
-	--all \
     --database-url="postgresql://username:@localhost:5432/example-indexer" \
-	--config-file="src/db/postgres/diesel.toml"
+	--config-file="src/db/postgres/diesel.toml" \
+	--all
 ```
 
 Create a `config.yaml` file from `example.config.yaml` file to point to the correct network, db url, start version, etc. Run the indexer.

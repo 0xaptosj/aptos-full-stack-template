@@ -36,7 +36,7 @@ export function DataTable<TData, TValue>({
   const [data, setData] = React.useState<TData[]>([]);
   const [totalItems, setTotalItems] = React.useState(0);
   const [sorting, setSorting] = React.useState<SortingState>([
-    { id: "id", desc: false },
+    { id: "message_obj_addr", desc: false },
   ]);
   const [{ pageIndex, pageSize }, setPagination] = React.useState({
     pageIndex: 0,
@@ -47,7 +47,7 @@ export function DataTable<TData, TValue>({
     const { messages, totalMessages } = await getMessagesOnServer({
       page: pageIndex + 1,
       limit: pageSize,
-      sortedBy: sorting[0]?.id as "id" | "creation_timestamp",
+      sortedBy: sorting[0]?.id as "creation_timestamp",
       order: sorting[0]?.desc ? "DESC" : "ASC",
     });
     setData(messages as TData[]);

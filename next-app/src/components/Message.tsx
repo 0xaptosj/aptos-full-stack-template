@@ -4,11 +4,11 @@ import { getMessage } from "@/db/getMessage";
 import { NETWORK } from "@/lib/aptos";
 
 interface MessageProps {
-  messageId: number;
+  messageObjAddr: `0x${string}`;
 }
 
-export async function Message({ messageId }: MessageProps) {
-  const { message } = await getMessage({ messageId });
+export async function Message({ messageObjAddr }: MessageProps) {
+  const { message } = await getMessage({ messageObjAddr });
 
   return (
     <Card>
@@ -20,8 +20,19 @@ export async function Message({ messageId }: MessageProps) {
           <LabelValueGrid
             items={[
               {
-                label: "ID",
-                value: <p>{message.id}</p>,
+                label: "Message object address",
+                value: (
+                  <p>
+                    <a
+                      href={`https://explorer.aptoslabs.com/object/${message.message_obj_addr}?network=${NETWORK}`}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="text-blue-600 dark:text-blue-300"
+                    >
+                      {message.message_obj_addr}
+                    </a>
+                  </p>
+                ),
               },
               {
                 label: "Creator address",
@@ -34,21 +45,6 @@ export async function Message({ messageId }: MessageProps) {
                       className="text-blue-600 dark:text-blue-300"
                     >
                       {message.creator_addr}
-                    </a>
-                  </p>
-                ),
-              },
-              {
-                label: "Message object address",
-                value: (
-                  <p>
-                    <a
-                      href={`https://explorer.aptoslabs.com/object/${message.message_obj_addr}?network=${NETWORK}`}
-                      target="_blank"
-                      rel="noreferrer"
-                      className="text-blue-600 dark:text-blue-300"
-                    >
-                      {message.message_obj_addr}
                     </a>
                   </p>
                 ),
