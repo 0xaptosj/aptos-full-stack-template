@@ -36,7 +36,7 @@ export function DataTable<TData, TValue>({
   const [data, setData] = React.useState<TData[]>([]);
   const [totalItems, setTotalItems] = React.useState(0);
   const [sorting, setSorting] = React.useState<SortingState>([
-    { id: "message_obj_addr", desc: false },
+    { id: "message_obj_addr", desc: true },
   ]);
   const [{ pageIndex, pageSize }, setPagination] = React.useState({
     pageIndex: 0,
