@@ -115,6 +115,8 @@ Go to secret manager and create a new secret with the content of the config.yaml
 
 ## Run the container on Cloud Run
 
+Video walkthrough: https://drive.google.com/file/d/1JayWuH2qgnqOgzVuZm9MwKT42hj4z0JN/view
+
 Go to cloud run dashboard, create a new service, and select the container image from Artifact Registry, also add a volume to ready the config.yaml file from Secret Manager, then mount the volume to the container.
 
 **NOTE**: always allocate cpu so it always runs instead of only run when there is traffic. Min and max instances should be 1.
