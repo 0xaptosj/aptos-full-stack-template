@@ -3,7 +3,7 @@
 import { getLastSuccessVersion } from "@/db/getLastSuccessVersion";
 import { GetMessageProps, getMessage } from "@/db/getMessage";
 import { GetMessagesProps, getMessages } from "@/db/getMessages";
-import { MessageBoardColumns, MessageInUi } from "@/lib/type/message";
+import { MessageBoardColumns, MessageOnUi } from "@/lib/type/message";
 
 export const getMessagesOnServer = async ({
   page,
@@ -20,7 +20,7 @@ export const getMessagesOnServer = async ({
 export const getMessageOnServer = async ({
   messageObjAddr,
 }: GetMessageProps): Promise<{
-  message: MessageInUi;
+  message: MessageOnUi;
 }> => {
   return getMessage({ messageObjAddr });
 };

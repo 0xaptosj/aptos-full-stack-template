@@ -7,11 +7,11 @@ export type MessageInDb = {
   content: string;
 };
 
-export type MessageInUi = {
+export type MessageOnUi = {
   message_obj_addr: `0x${string}`;
   creator_addr: `0x${string}`;
-  creation_timestamp: string;
-  last_update_timestamp: string;
+  creation_timestamp: number;
+  last_update_timestamp: number;
   content: string;
 };
 

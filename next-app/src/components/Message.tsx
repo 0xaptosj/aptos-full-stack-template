@@ -1,14 +1,28 @@
+"use client";
+
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { LabelValueGrid } from "@/components/LabelValueGrid";
-import { getMessage } from "@/db/getMessage";
 import { NETWORK } from "@/lib/aptos";
+import { useEffect, useState } from "react";
+import { MessageOnUi } from "@/lib/type/message";
+import { getMessageOnServer } from "@/app/actions";
 
 interface MessageProps {
   messageObjAddr: `0x${string}`;
 }
 
-export async function Message({ messageObjAddr }: MessageProps) {
-  const { message } = await getMessage({ messageObjAddr });
+export function Message({ messageObjAddr }: MessageProps) {
+  const [message, setMessage] = useState<MessageOnUi>();
+
+  useEffect(() => {
+    getMessageOnServer({ messageObjAddr }).then(({ message }) => {
+      setMessage(message);
+    });
+  }, [messageObjAddr]);
+
+  if (!message) {
+    return <>Loading...</>;
+  }
 
   return (
     <Card>
@@ -51,11 +65,23 @@ export async function Message({ messageObjAddr }: MessageProps) {
               },
               {
                 label: "Creation timestamp",
-                value: <p>{message.creation_timestamp}</p>,
+                value: (
+                  <p>
+                    {new Date(
+                      message.creation_timestamp * 1000
+                    ).toLocaleString()}
+                  </p>
+                ),
               },
               {
                 label: "Last update timestamp",
-                value: <p>{message.last_update_timestamp}</p>,
+                value: (
+                  <p>
+                    {new Date(
+                      message.last_update_timestamp * 1000
+                    ).toLocaleString()}
+                  </p>
+                ),
               },
               {
                 label: "Content",
