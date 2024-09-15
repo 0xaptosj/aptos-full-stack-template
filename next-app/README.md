@@ -1,4 +1,35 @@
+# Aptos full stack template UI
+
 This is a [Next.js](https://nextjs.org/) project bootstrapped with [`create-next-app`](https://github.com/vercel/next.js/tree/canary/packages/create-next-app).
+
+## Local development
+
+This template uses `@vercel/postgres` to connect to a Postgres database. When testing locally, it cannot connect to local DB. You have to either use a cloud DB on Vercel or a local DB in Docker. I highly recommend using an independent cloud DB on Vercel. You can learn more on [Vercel docs](https://vercel.com/docs/storage/vercel-postgres/local-development).
+
+## Create a read only user in DB
+
+This frontend should only read from the DB, the indexer is the only one that writes to the DB. So, create a read only user in the DB for frontend to use for safety.
+
+```sql
+-- Create a readonly user
+-- Please don't use any special characters in the password to avoid @vercel/postgres give invalid connection string error
+CREATE USER readonly WITH PASSWORD 'strong_password'
+-- Grant readonly user read access to all tables in public schema
+GRANT SELECT ON ALL TABLES IN SCHEMA public TO readonly;
+-- Grant readonly user read access to all future tables in public schema
+ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT SELECT ON TABLES TO readonly;
+```
+
+Some useful SQLs to check the user and schema:
+
+```sql
+-- Get all users
+SELECT * FROM pg_user;
+-- Get all schemas
+SELECT schema_name FROM information_schema.schemata;
+```
+
+Then fill the `POSTGRES_URL` in `.env` file with the readonly user.
 
 ## Getting Started
 

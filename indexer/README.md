@@ -4,23 +4,31 @@ This indexer is created from indexer-sdk, see a more detailed readme in [example
 
 We use the term indexer and processor interchangeably.
 
-# Running the indexer
+## Pre-requisites
+
+Create a Vercel account and a Google Cloud account. We use Vercel to host the Postgres DB and Google Cloud to host the indexer.
+
+Create a new Vercel Postgres DB and a new Google Cloud project.
+
+Learn more about Vercel Postgres on [their docs](https://vercel.com/docs/storage/vercel-postgres).
+
+## Running the indexer locally
 
 **Note: all commends below need to be run in the current indexer directory instead of root directory.**
 
-## Steps
+### Steps
 
-Drop the DB if exists. You cannot do this if you are using a cloud provider. Follow the revert migration command below instead.
+Drop the DB if exists. You cannot do this if you are using a cloud DB. Follow the revert migration command below instead.
 
 ```sh
-psql postgres://username@127.0.0.1:5432/postgres \
+psql postgres://username:password@127.0.0.1:5432/postgres \
     -c 'DROP DATABASE IF EXISTS "example-indexer"'
 ```
 
 Create the DB.
 
 ```sh
-psql postgres://username@127.0.0.1:5432/postgres \
+psql postgres://username:password@127.0.0.1:5432/postgres \
     -c 'CREATE DATABASE "example-indexer"'
 ```
 
@@ -35,7 +43,7 @@ Run all pending migrations.
 
 ```sh
 diesel migration run \
-    --database-url="postgresql://username:@localhost:5432/example-indexer" \
+    --database-url="postgresql://username:password@localhost:5432/example-indexer" \
     --config-file="src/db/postgres/diesel.toml"
 ```
 
@@ -43,7 +51,7 @@ In case you want to revert all migrations. On cloud provider, you cannot drop da
 
 ```sh
 diesel migration revert \
-    --database-url="postgresql://username:@localhost:5432/example-indexer" \
+    --database-url="postgresql://username:password@localhost:5432/example-indexer" \
 	--config-file="src/db/postgres/diesel.toml" \
 	--all
 ```
@@ -62,7 +70,7 @@ You should see the indexer start to index Aptos blockchain events!
 "timestamp":"2024-08-15T01:06:35.257801Z","level":"INFO","message":"Finished processing events from versions [0, 4999]","filename":"src/processors/events/events_processor.rs","line_number":90,"threadName":"tokio-runtime-worker","threadId":"ThreadId(17)"
 ```
 
-# Get ready for cloud deployment
+## Get ready for cloud deployment
 
 I'm using GCP Cloud Run and Artifact Registry.
 
@@ -75,7 +83,7 @@ And deploying to Cloud Run:
 
 - https://cloud.google.com/run/docs/quickstarts/deploy-container
 
-## Build the docker image locally and run the container locally
+### Build the docker image locally and run the container locally
 
 Build the docker image targeting linux/amd64 because eventually, we will push the image to Artifact Registry and deploy it to Cloud Run.
 
@@ -89,7 +97,7 @@ Run the docker container locally. Mac supports linux/amd64 emulation so you can 
 docker run -p 8080:8080 -it indexer
 ```
 
-## Push the locally build docker image to Artifact Registry
+### Push the locally build docker image to Artifact Registry
 
 Tag the docker image.
 
@@ -109,11 +117,11 @@ Push the docker image to the container registry.
 docker push us-west2-docker.pkg.dev/indexer-sdk-demo/indexer-sdk-demo/indexer
 ```
 
-## Upload the config.yaml file to Secret Manager
+### Upload the config.yaml file to Secret Manager
 
 Go to secret manager and create a new secret with the content of the config.yaml file.
 
-## Run the container on Cloud Run
+### Run the container on Cloud Run
 
 Video walkthrough: https://drive.google.com/file/d/1JayWuH2qgnqOgzVuZm9MwKT42hj4z0JN/view
 
