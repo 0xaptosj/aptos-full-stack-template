@@ -2,7 +2,7 @@
 
 NETWORK=testnet
 
-CONTRACT_ADDRESS=$(cat ../contract_address.txt)
+CONTRACT_ADDRESS=$(cat ./contract_address.txt)
 
 MODULE_NAME=message_board
 
