@@ -12,6 +12,12 @@ Create a new Vercel Postgres DB and a new Google Cloud project.
 
 Learn more about Vercel Postgres on [their docs](https://vercel.com/docs/storage/vercel-postgres).
 
+Install diesel cli to run migrations.
+
+```sh
+cargo install diesel_cli --no-default-features --features postgres
+```
+
 ## Running the indexer locally
 
 **Note: all commends below need to be run in the current indexer directory instead of root directory.**
