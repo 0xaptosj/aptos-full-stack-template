@@ -1,10 +1,11 @@
-use super::database::ArcDbPool;
-use crate::{
-    db::common::models::ledger_info::LedgerInfo, schema::ledger_infos,
-    utils::database::execute_with_better_error_conn,
-};
 use anyhow::{Context, Result};
 use tracing::info;
+
+use super::database_utils::ArcDbPool;
+use crate::{
+    db_models::ledger_info::LedgerInfo, schema::ledger_infos,
+    utils::database_execution::execute_with_better_error_conn,
+};
 
 /// Verify the chain id from GRPC against the database.
 pub async fn check_or_update_chain_id(grpc_chain_id: i64, db_pool: ArcDbPool) -> Result<u64> {

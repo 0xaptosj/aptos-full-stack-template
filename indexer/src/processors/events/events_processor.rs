@@ -1,13 +1,3 @@
-use super::{events_extractor::EventsExtractor, events_storer::EventsStorer};
-use crate::{
-    common_steps::latest_processed_version_tracker::LatestVersionProcessedTracker,
-    config::indexer_processor_config::IndexerProcessorConfig,
-    utils::{
-        chain_id::check_or_update_chain_id,
-        database::{new_db_pool, ArcDbPool},
-        starting_version::get_starting_version,
-    },
-};
 use anyhow::Result;
 use aptos_indexer_processor_sdk::{
     aptos_indexer_transaction_stream::{TransactionStream, TransactionStreamConfig},
@@ -16,6 +6,16 @@ use aptos_indexer_processor_sdk::{
     traits::IntoRunnableStep,
 };
 use tracing::info;
+
+use super::{events_extractor::EventsExtractor, events_storer::EventsStorer};
+use crate::{
+    config::indexer_processor_config::IndexerProcessorConfig,
+    utils::{
+        chain_id::check_or_update_chain_id, database_connection::new_db_pool,
+        database_utils::ArcDbPool, latest_processed_version_tracker::LatestVersionProcessedTracker,
+        starting_version::get_starting_version,
+    },
+};
 
 pub struct EventsProcessor {
     pub config: IndexerProcessorConfig,

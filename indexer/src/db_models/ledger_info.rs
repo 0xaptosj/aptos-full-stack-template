@@ -1,8 +1,9 @@
 #![allow(clippy::extra_unused_lifetimes)]
 
-use crate::{schema::ledger_infos, utils::database::DbPoolConnection};
 use diesel::{Identifiable, Insertable, OptionalExtension, QueryDsl, Queryable};
 use diesel_async::RunQueryDsl;
+
+use crate::{schema::ledger_infos, utils::database_utils::DbPoolConnection};
 
 #[derive(Debug, Identifiable, Insertable, Queryable)]
 #[diesel(table_name = ledger_infos)]

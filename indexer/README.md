@@ -42,24 +42,24 @@ Create a new migration file.
 
 ```sh
 diesel migration generate create-abc-table \
-    --config-file="src/db/postgres/diesel.toml"
+    --config-file="src/db_migrations/diesel.toml"
 ```
 
 Run all pending migrations.
 
 ```sh
 diesel migration run \
-    --database-url="postgresql://username:password@localhost:5432/example-indexer" \
-    --config-file="src/db/postgres/diesel.toml"
+    --config-file="src/db_migrations/diesel.toml" \
+    --database-url="postgresql://username:password@localhost:5432/example-indexer"
 ```
 
 In case you want to revert all migrations. On cloud provider, you cannot drop database, so you need to revert all migrations if you want to reset.
 
 ```sh
 diesel migration revert \
-    --database-url="postgresql://username:password@localhost:5432/example-indexer" \
-	--config-file="src/db/postgres/diesel.toml" \
-	--all
+	--all \
+	--config-file="src/db_migrations/diesel.toml" \
+    --database-url="postgresql://username:password@localhost:5432/example-indexer"
 ```
 
 Create a `config.yaml` file from `example.config.yaml` file to point to the correct network, db url, start version, etc. Run the indexer.

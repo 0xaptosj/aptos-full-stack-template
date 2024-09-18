@@ -1,8 +1,3 @@
-use crate::{
-    db::common::models::events_models::{ContractEvent, Message},
-    schema::{self},
-    utils::database::{execute_in_chunks, get_config_table_chunk_size, ArcDbPool},
-};
 use ahash::AHashMap;
 use anyhow::Result;
 use aptos_indexer_processor_sdk::{
@@ -19,17 +14,26 @@ use diesel::{
 };
 use tracing::error;
 
+use crate::{
+    db_models::events_models::{ContractEvent, Message},
+    schema::{self},
+    utils::{
+        database_execution::execute_in_chunks,
+        database_utils::{get_config_table_chunk_size, ArcDbPool},
+    },
+};
+
 /// EventsStorer is a step that inserts events in the database.
 pub struct EventsStorer
 where
     Self: Sized + Send + 'static,
 {
-    conn_pool: ArcDbPool,
+    pool: ArcDbPool,
 }
 
 impl EventsStorer {
-    pub fn new(conn_pool: ArcDbPool) -> Self {
-        Self { conn_pool }
+    pub fn new(pool: ArcDbPool) -> Self {
+        Self { pool }
     }
 }
 
@@ -109,7 +113,7 @@ impl Processable for EventsStorer {
         );
 
         let create_result = execute_in_chunks(
-            self.conn_pool.clone(),
+            self.pool.clone(),
             create_message_events_sql,
             &create_events,
             get_config_table_chunk_size::<Message>("messages", &per_table_chunk_sizes),
@@ -127,7 +131,7 @@ impl Processable for EventsStorer {
         }
 
         let update_result = execute_in_chunks(
-            self.conn_pool.clone(),
+            self.pool.clone(),
             update_message_events_sql,
             &update_events,
             // run update sequentially because we cannot update one record multiple times in a single DB transaction

@@ -3,7 +3,7 @@ use aptos_indexer_processor_sdk_server_framework::ServerArgs;
 use clap::Parser;
 use indexer::{
     config::indexer_processor_config::IndexerProcessorConfig,
-    server::{self, HealthServerConfig},
+    health_check_server::{self, HealthServerConfig},
 };
 
 #[cfg(unix)]
@@ -11,7 +11,7 @@ use indexer::{
 static ALLOC: jemallocator::Jemalloc = jemallocator::Jemalloc;
 
 async fn run_health_server() -> Result<()> {
-    server::run(HealthServerConfig::default()).await
+    health_check_server::run(HealthServerConfig::default()).await
 }
 
 async fn run_indexer() -> Result<()> {

@@ -1,9 +1,3 @@
-use crate::{
-    config::indexer_processor_config::DbConfig,
-    db::common::models::processor_status::ProcessorStatus,
-    schema::processor_status,
-    utils::database::{execute_with_better_error, new_db_pool, ArcDbPool},
-};
 use ahash::AHashMap;
 use anyhow::{Context, Result};
 use aptos_indexer_processor_sdk::{
@@ -14,6 +8,15 @@ use aptos_indexer_processor_sdk::{
 use async_trait::async_trait;
 use diesel::{upsert::excluded, ExpressionMethods};
 
+use super::{
+    database_connection::new_db_pool, database_execution::execute_with_better_error,
+    database_utils::ArcDbPool,
+};
+use crate::{
+    config::indexer_processor_config::DbConfig, db_models::processor_status::ProcessorStatus,
+    schema::processor_status,
+};
+
 const UPDATE_PROCESSOR_STATUS_SECS: u64 = 1;
 
 pub struct LatestVersionProcessedTracker<T>
@@ -21,7 +24,7 @@ where
     Self: Sized + Send + 'static,
     T: Send + 'static,
 {
-    conn_pool: ArcDbPool,
+    pool: ArcDbPool,
     tracker_name: String,
     // Next version to process that we expect.
     next_version: u64,
@@ -41,14 +44,14 @@ where
         starting_version: u64,
         tracker_name: String,
     ) -> Result<Self> {
-        let conn_pool = new_db_pool(
+        let pool = new_db_pool(
             &db_config.postgres_connection_string,
             db_config.db_pool_size,
         )
         .await
         .context("Failed to create connection pool")?;
         Ok(Self {
-            conn_pool,
+            pool,
             tracker_name,
             next_version: starting_version,
             last_success_batch: None,
@@ -80,23 +83,25 @@ where
                 last_success_version: last_success_batch.end_version as i64,
                 last_transaction_timestamp: end_timestamp,
             };
-            execute_with_better_error(
-                self.conn_pool.clone(),
-                diesel::insert_into(processor_status::table)
-                    .values(&status)
-                    .on_conflict(processor_status::processor)
-                    .do_update()
-                    .set((
-                        processor_status::last_success_version
-                            .eq(excluded(processor_status::last_success_version)),
-                        processor_status::last_updated.eq(excluded(processor_status::last_updated)),
-                        processor_status::last_transaction_timestamp
-                            .eq(excluded(processor_status::last_transaction_timestamp)),
-                    )),
-                Some(" WHERE processor_status.last_success_version <= EXCLUDED.last_success_version "),
-            ).await.map_err(|e| ProcessorError::DBStoreError {
-                message: format!("Failed to update processor status: {}", e),
-            })?;
+            let query = diesel::insert_into(processor_status::table)
+                .values(&status)
+                .on_conflict(processor_status::processor)
+                .do_update()
+                .set((
+                    processor_status::last_success_version
+                        .eq(excluded(processor_status::last_success_version)),
+                    processor_status::last_updated.eq(excluded(processor_status::last_updated)),
+                    processor_status::last_transaction_timestamp
+                        .eq(excluded(processor_status::last_transaction_timestamp)),
+                ));
+            let where_clause = Some(
+                " WHERE processor_status.last_success_version <= EXCLUDED.last_success_version ",
+            );
+            execute_with_better_error(self.pool.clone(), query, where_clause)
+                .await
+                .map_err(|e| ProcessorError::DBStoreError {
+                    message: format!("Failed to update processor status: {}", e),
+                })?;
         }
         Ok(())
     }

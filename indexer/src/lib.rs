@@ -1,9 +1,8 @@
-pub mod common_steps;
 pub mod config;
-pub mod db;
+pub mod db_models;
+pub mod health_check_server;
 pub mod processors;
 pub mod utils;
-pub mod server;
 
-#[path = "db/postgres/schema.rs"]
+#[path = "db_migrations/schema.rs"]
 pub mod schema;

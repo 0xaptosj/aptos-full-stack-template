@@ -1,4 +1,4 @@
-use crate::db::common::models::events_models::ContractEvent;
+use crate::db_models::events_models::ContractEvent;
 use anyhow::Result;
 use aptos_indexer_processor_sdk::{
     aptos_protos::transaction::v1::{transaction::TxnData, Transaction},
