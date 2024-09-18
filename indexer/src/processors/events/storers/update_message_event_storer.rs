@@ -18,8 +18,8 @@ use crate::{
 
 fn update_message_events_sql(
     items_to_insert: Vec<Message>,
-) -> impl QueryFragment<Pg> + diesel::query_builder::QueryId + Send {
-    diesel::insert_into(messages::table)
+) -> Vec<impl QueryFragment<Pg> + diesel::query_builder::QueryId + Send> {
+    let query = diesel::insert_into(messages::table)
         .values(items_to_insert)
         .on_conflict(messages::message_obj_addr)
         .do_update()
@@ -42,7 +42,9 @@ fn update_message_events_sql(
                         messages::last_update_event_idx
                             .lt(excluded(messages::last_update_event_idx)),
                     )),
-        )
+        );
+
+    vec![query]
 }
 
 pub async fn process_update_message_events(

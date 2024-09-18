@@ -1,6 +1,3 @@
-//! Database-related functions
-#![allow(clippy::extra_unused_lifetimes)]
-
 use diesel::ConnectionResult;
 use diesel_async::{
     pooled_connection::{bb8::Pool, AsyncDieselConnectionManager, ManagerConfig, PoolError},

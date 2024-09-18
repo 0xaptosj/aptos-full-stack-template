@@ -1,4 +1,3 @@
-#![allow(clippy::extra_unused_lifetimes)]
 
 use diesel::{Identifiable, Insertable, OptionalExtension, QueryDsl, Queryable};
 use diesel_async::RunQueryDsl;

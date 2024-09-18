@@ -98,7 +98,7 @@ where
                     processor_status::last_success_version
                         .lt(excluded(processor_status::last_success_version)),
                 );
-            execute_with_better_error(self.pool.clone(), query)
+            execute_with_better_error(self.pool.clone(), vec![query])
                 .await
                 .map_err(|e| ProcessorError::DBStoreError {
                     message: format!("Failed to update processor status: {}", e),
