@@ -35,18 +35,15 @@ pub async fn check_or_update_chain_id(grpc_chain_id: i64, db_pool: ArcDbPool) ->
                 chain_id = grpc_chain_id,
                 "Adding chain id to db, continue to index..."
             );
-            execute_with_better_error_conn(
-                &mut conn,
-                diesel::insert_into(ledger_infos::table)
-                    .values(LedgerInfo {
-                        chain_id: grpc_chain_id,
-                    })
-                    .on_conflict_do_nothing(),
-                None,
-            )
-            .await
-            .context("Error updating chain_id!")
-            .map(|_| grpc_chain_id as u64)
+            let query = diesel::insert_into(ledger_infos::table)
+                .values(LedgerInfo {
+                    chain_id: grpc_chain_id,
+                })
+                .on_conflict_do_nothing();
+            execute_with_better_error_conn(&mut conn, query, None)
+                .await
+                .context("Error updating chain_id!")
+                .map(|_| grpc_chain_id as u64)
         }
     }
 }
