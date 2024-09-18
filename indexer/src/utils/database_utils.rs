@@ -1,9 +1,5 @@
 use ahash::AHashMap;
 use aptos_indexer_processor_sdk::utils::convert::remove_null_bytes;
-use diesel::{
-    query_builder::{AstPass, Query, QueryFragment, QueryId},
-    QueryResult,
-};
 use diesel_async::{
     pooled_connection::bb8::{Pool, PooledConnection},
     AsyncPgConnection,
@@ -18,33 +14,6 @@ pub type DbPoolConnection<'a> = PooledConnection<'a, MyDbConnection>;
 
 // the max is actually u16::MAX but we see that when the size is too big we get an overflow error so reducing it a bit
 const MAX_DIESEL_PARAM_SIZE: usize = (u16::MAX / 2) as usize;
-
-#[derive(QueryId)]
-/// Using this will append a where clause at the end of the string upsert function, e.g.
-/// INSERT INTO ... ON CONFLICT DO UPDATE SET ... WHERE "transaction_version" = excluded."transaction_version"
-/// This is needed when we want to maintain a table with only the latest state
-pub struct UpsertFilterLatestTransactionQuery<T> {
-    pub query: T,
-    pub where_clause: Option<&'static str>,
-}
-
-/// Section below is required to modify the query.
-impl<T: Query> Query for UpsertFilterLatestTransactionQuery<T> {
-    type SqlType = T::SqlType;
-}
-
-impl<T> QueryFragment<Backend> for UpsertFilterLatestTransactionQuery<T>
-where
-    T: QueryFragment<Backend>,
-{
-    fn walk_ast<'b>(&'b self, mut out: AstPass<'_, 'b, Backend>) -> QueryResult<()> {
-        self.query.walk_ast(out.reborrow())?;
-        if let Some(w) = self.where_clause {
-            out.push_sql(w);
-        }
-        Ok(())
-    }
-}
 
 /// Returns the entry for the config hashmap, or the default field count for the insert
 /// Given diesel has a limit of how many parameters can be inserted in a single operation (u16::MAX),

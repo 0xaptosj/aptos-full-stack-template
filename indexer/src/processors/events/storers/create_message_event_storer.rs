@@ -15,17 +15,11 @@ use crate::{
 
 fn create_message_events_sql(
     items_to_insert: Vec<Message>,
-) -> (
-    impl QueryFragment<Pg> + diesel::query_builder::QueryId + Send,
-    Option<&'static str>,
-) {
-    (
-        diesel::insert_into(messages::table)
-            .values(items_to_insert)
-            .on_conflict(messages::message_obj_addr)
-            .do_nothing(),
-        None,
-    )
+) -> impl QueryFragment<Pg> + diesel::query_builder::QueryId + Send {
+    diesel::insert_into(messages::table)
+        .values(items_to_insert)
+        .on_conflict(messages::message_obj_addr)
+        .do_nothing()
 }
 
 pub async fn process_create_message_events(

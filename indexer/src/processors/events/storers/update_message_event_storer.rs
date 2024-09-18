@@ -18,34 +18,31 @@ use crate::{
 
 fn update_message_events_sql(
     items_to_insert: Vec<Message>,
-) -> (
-    impl QueryFragment<Pg> + diesel::query_builder::QueryId + Send,
-    Option<&'static str>,
-) {
-    (
-        diesel::insert_into(messages::table)
-            .values(items_to_insert)
-            .on_conflict(messages::message_obj_addr)
-            .do_update()
-            .set((
-                messages::message_obj_addr.eq(excluded(messages::message_obj_addr)),
-                messages::creator_addr.eq(excluded(messages::creator_addr)),
-                messages::creation_timestamp.eq(excluded(messages::creation_timestamp)),
-                messages::last_update_timestamp.eq(excluded(messages::last_update_timestamp)),
-                messages::last_update_event_idx.eq(excluded(messages::last_update_event_idx)),
-                messages::content.eq(excluded(messages::content)),
-            ))
-            .filter(
-                // Update only if the last update timestamp is greater than the existing one
-                // or if the last update timestamp is the same but the event index is greater
-                messages::last_update_timestamp
-                    .lt(excluded(messages::last_update_timestamp))
-                    .or(messages::last_update_timestamp
-                        .eq(excluded(messages::last_update_timestamp))
-                        .and(messages::last_update_event_idx.lt(excluded(messages::last_update_event_idx)))),
-            ),
-        None,
-    )
+) -> impl QueryFragment<Pg> + diesel::query_builder::QueryId + Send {
+    diesel::insert_into(messages::table)
+        .values(items_to_insert)
+        .on_conflict(messages::message_obj_addr)
+        .do_update()
+        .set((
+            messages::message_obj_addr.eq(excluded(messages::message_obj_addr)),
+            messages::creator_addr.eq(excluded(messages::creator_addr)),
+            messages::creation_timestamp.eq(excluded(messages::creation_timestamp)),
+            messages::last_update_timestamp.eq(excluded(messages::last_update_timestamp)),
+            messages::last_update_event_idx.eq(excluded(messages::last_update_event_idx)),
+            messages::content.eq(excluded(messages::content)),
+        ))
+        .filter(
+            // Update only if the last update timestamp is greater than the existing one
+            // or if the last update timestamp is the same but the event index is greater
+            messages::last_update_timestamp
+                .lt(excluded(messages::last_update_timestamp))
+                .or(messages::last_update_timestamp
+                    .eq(excluded(messages::last_update_timestamp))
+                    .and(
+                        messages::last_update_event_idx
+                            .lt(excluded(messages::last_update_event_idx)),
+                    )),
+        )
 }
 
 pub async fn process_update_message_events(

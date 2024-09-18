@@ -6,7 +6,7 @@ use aptos_indexer_processor_sdk::{
     utils::{errors::ProcessorError, time::parse_timestamp},
 };
 use async_trait::async_trait;
-use diesel::{upsert::excluded, ExpressionMethods};
+use diesel::{query_dsl::methods::FilterDsl, upsert::excluded, ExpressionMethods};
 
 use super::{
     database_connection::new_db_pool, database_execution::execute_with_better_error,
@@ -93,11 +93,12 @@ where
                     processor_status::last_updated.eq(excluded(processor_status::last_updated)),
                     processor_status::last_transaction_timestamp
                         .eq(excluded(processor_status::last_transaction_timestamp)),
-                ));
-            let where_clause = Some(
-                " WHERE processor_status.last_success_version <= EXCLUDED.last_success_version ",
-            );
-            execute_with_better_error(self.pool.clone(), query, where_clause)
+                ))
+                .filter(
+                    processor_status::last_success_version
+                        .lt(excluded(processor_status::last_success_version)),
+                );
+            execute_with_better_error(self.pool.clone(), query)
                 .await
                 .map_err(|e| ProcessorError::DBStoreError {
                     message: format!("Failed to update processor status: {}", e),
