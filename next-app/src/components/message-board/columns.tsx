@@ -9,14 +9,12 @@ import { MessageBoardColumns } from "@/lib/type/message";
 
 export const columns: ColumnDef<MessageBoardColumns>[] = [
   {
-    accessorKey: "message_obj_addr",
+    accessorKey: "content",
     header: ({ column }) => (
-      <DataTableColumnHeader column={column} title="Message Object Address" />
+      <DataTableColumnHeader column={column} title="Message Content" />
     ),
     cell: ({ row }) => (
-      <div className="w-[80px]">
-        {truncateAddress(row.getValue("message_obj_addr"))}
-      </div>
+      <div className="w-[80px]">{row.getValue("content")}</div>
     ),
     enableSorting: false,
   },
