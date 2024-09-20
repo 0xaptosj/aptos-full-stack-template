@@ -1,8 +1,8 @@
-use crate::schema::messages;
+use crate::schema::{messages, user_points};
 use aptos_indexer_processor_sdk::{
     aptos_protos::transaction::v1::Event as EventPB, utils::convert::standardize_address,
 };
-use diesel::{AsChangeset, Insertable};
+use diesel::{AsChangeset, Insertable, Queryable};
 use field_count::FieldCount;
 use serde::{Deserialize, Serialize};
 
@@ -39,6 +39,17 @@ pub struct Message {
     pub last_update_timestamp: i64,
     pub last_update_event_idx: i64,
     pub content: String,
+}
+
+#[derive(AsChangeset, Clone, Debug, Deserialize, FieldCount, Insertable, Serialize, Queryable)]
+#[diesel(table_name = user_points)]
+/// Database representation of a user_point
+pub struct UserPoint {
+    pub user_addr: String,
+    pub points: i64,
+    pub creation_timestamp: i64,
+    pub last_update_timestamp: i64,
+    pub last_update_event_idx: i64,
 }
 
 #[derive(Debug, Clone)]

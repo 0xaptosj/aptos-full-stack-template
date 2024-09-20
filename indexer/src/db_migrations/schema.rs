@@ -29,8 +29,20 @@ diesel::table! {
     }
 }
 
+diesel::table! {
+    user_points (user_addr) {
+        #[max_length = 300]
+        user_addr -> Varchar,
+        creation_timestamp -> Int8,
+        last_update_timestamp -> Int8,
+        points -> Int8,
+        last_update_event_idx -> Int8,
+    }
+}
+
 diesel::allow_tables_to_appear_in_same_query!(
     ledger_infos,
     messages,
     processor_status,
+    user_points,
 );

@@ -12,11 +12,12 @@ use crate::{
     schema::messages,
     utils::{
         database_execution::execute_in_chunks,
-        database_utils::{get_config_table_chunk_size, ArcDbPool},
+        database_utils::{get_config_table_chunk_size, ArcDbPool, MyDbConnection},
     },
 };
 
-fn update_message_events_sql(
+async fn update_message_events_sql(
+    conn: &mut MyDbConnection,
     items_to_insert: Vec<Message>,
 ) -> Vec<impl QueryFragment<Pg> + diesel::query_builder::QueryId + Send> {
     let query = diesel::insert_into(messages::table)
@@ -74,7 +75,8 @@ pub async fn process_update_message_events(
 
     let update_result = execute_in_chunks(
         pool.clone(),
-        update_message_events_sql,
+        // update_message_events_sql,
+        |conn, items| async move { update_message_events_sql(conn, items).await },
         &filtered_update_events,
         get_config_table_chunk_size::<Message>("messages", &per_table_chunk_sizes),
     )

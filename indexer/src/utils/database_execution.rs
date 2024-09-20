@@ -1,28 +1,37 @@
-use diesel::{query_builder::QueryFragment, QueryResult};
+use std::future::Future;
+
+use diesel::{
+    debug_query,
+    query_builder::{QueryFragment, QueryId},
+    result::{DatabaseErrorKind, Error as DieselError},
+    QueryResult,
+};
 use diesel_async::{AsyncConnection, RunQueryDsl};
+use serde::{Deserialize, Serialize};
 use tracing::{debug, warn};
 
 use super::database_utils::{clean_data_for_db, ArcDbPool, Backend, MyDbConnection};
 
-pub async fn execute_in_chunks<U, T>(
+pub async fn execute_in_chunks<U, T, F, Fut>(
     pool: ArcDbPool,
-    build_queries: fn(Vec<T>) -> Vec<U>,
+    build_queries: F,
     items_to_insert: &[T],
     chunk_size: usize,
-) -> Result<(), diesel::result::Error>
+) -> Result<(), DieselError>
 where
-    U: QueryFragment<Backend> + diesel::query_builder::QueryId + Send + 'static,
-    T: serde::Serialize + for<'de> serde::Deserialize<'de> + Clone + Send + 'static,
+    U: QueryFragment<Backend> + QueryId + Send + 'static,
+    T: Serialize + for<'de> Deserialize<'de> + Clone + Send + 'static,
+    F: Fn(&mut MyDbConnection, Vec<T>) -> Fut + Clone + Send + Sync + 'static,
+    Fut: Future<Output = Vec<U>> + Send,
 {
     let tasks = items_to_insert
         .chunks(chunk_size)
         .map(|chunk| {
             let pool = pool.clone();
             let items = chunk.to_vec();
-            tokio::spawn(async move {
-                let queries = build_queries(items.clone());
-                execute_or_retry_cleaned(pool, build_queries, items, queries).await
-            })
+            let build_queries = build_queries.clone(); // Clone build_queries here
+
+            tokio::spawn(async move { execute_or_retry_cleaned(pool, build_queries, items).await })
         })
         .collect::<Vec<_>>();
 
@@ -36,22 +45,54 @@ where
     Ok(())
 }
 
-pub async fn execute_or_retry_cleaned<U, T>(
+pub async fn execute_or_retry_cleaned<U, T, F, Fut>(
     pool: ArcDbPool,
-    build_queries: fn(Vec<T>) -> Vec<U>,
+    build_queries: F,
     items: Vec<T>,
-    queries: Vec<U>,
-) -> Result<(), diesel::result::Error>
+) -> Result<(), DieselError>
 where
-    U: QueryFragment<Backend> + diesel::query_builder::QueryId + Send,
-    T: serde::Serialize + for<'de> serde::Deserialize<'de> + Clone,
+    U: QueryFragment<Backend> + QueryId + Send,
+    T: Serialize + for<'de> Deserialize<'de> + Clone,
+    F: Fn(&mut MyDbConnection, Vec<T>) -> Fut + Clone + Send + Sync + 'static,
+    Fut: Future<Output = Vec<U>> + Send,
 {
-    match execute_with_better_error(pool.clone(), queries).await {
+    let cloned_pool_1 = pool.clone();
+    let conn_1: &mut MyDbConnection = &mut cloned_pool_1
+        .get()
+        .await
+        .map_err(|e| {
+            warn!("Error getting connection from pool: {:?}", e);
+            DieselError::DatabaseError(
+                DatabaseErrorKind::UnableToSendCommand,
+                Box::new(e.to_string()),
+            )
+        })
+        .unwrap();
+    match build_query_and_execute_with_better_error_conn(
+        conn_1,
+        build_queries.clone(),
+        items.clone(),
+    )
+    .await
+    {
         Ok(_) => {}
         Err(_) => {
+            let cloned_pool_2 = pool.clone();
+            let conn_2 = &mut cloned_pool_2.get().await.map_err(|e| {
+                warn!("Error getting connection from pool: {:?}", e);
+                DieselError::DatabaseError(
+                    DatabaseErrorKind::UnableToSendCommand,
+                    Box::new(e.to_string()),
+                )
+            })?;
             let cleaned_items = clean_data_for_db(items, true);
-            let cleaned_queries = build_queries(cleaned_items);
-            match execute_with_better_error(pool.clone(), cleaned_queries).await {
+            match build_query_and_execute_with_better_error_conn(
+                conn_2,
+                build_queries,
+                cleaned_items,
+            )
+            .await
+            {
                 Ok(_) => {}
                 Err(e) => {
                     return Err(e);
@@ -62,14 +103,29 @@ where
     Ok(())
 }
 
+pub async fn build_query_and_execute_with_better_error_conn<U, T, F, Fut>(
+    conn: &mut MyDbConnection,
+    build_queries: F,
+    items: Vec<T>,
+) -> QueryResult<()>
+where
+    U: QueryFragment<Backend> + QueryId + Send,
+    T: Serialize + for<'de> Deserialize<'de> + Clone,
+    F: Fn(&mut MyDbConnection, Vec<T>) -> Fut + Send + Sync + 'static,
+    Fut: Future<Output = Vec<U>> + Send,
+{
+    let queries = build_queries(conn, items).await;
+    execute_with_better_error_conn(conn, queries).await
+}
+
 pub async fn execute_with_better_error<U>(pool: ArcDbPool, queries: Vec<U>) -> QueryResult<()>
 where
-    U: QueryFragment<Backend> + diesel::query_builder::QueryId + Send,
+    U: QueryFragment<Backend> + QueryId + Send,
 {
     let conn = &mut pool.get().await.map_err(|e| {
         warn!("Error getting connection from pool: {:?}", e);
-        diesel::result::Error::DatabaseError(
-            diesel::result::DatabaseErrorKind::UnableToSendCommand,
+        DieselError::DatabaseError(
+            DatabaseErrorKind::UnableToSendCommand,
             Box::new(e.to_string()),
         )
     })?;
@@ -82,13 +138,16 @@ pub async fn execute_with_better_error_conn<U>(
     queries: Vec<U>,
 ) -> QueryResult<()>
 where
-    U: QueryFragment<Backend> + diesel::query_builder::QueryId + Send,
+    U: QueryFragment<Backend> + QueryId + Send,
 {
     let debug_query = queries
         .iter()
-        .map(|q| diesel::debug_query::<Backend, _>(q).to_string())
+        .map(|q| debug_query::<Backend, _>(q).to_string())
         .collect::<Vec<_>>();
-    debug!("Executing queries in one DB transaction atomically: {:?}", debug_query);
+    debug!(
+        "Executing queries in one DB transaction atomically: {:?}",
+        debug_query
+    );
     let res = conn
         .transaction(|conn| {
             Box::pin(async move {
