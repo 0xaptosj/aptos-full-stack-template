@@ -50,7 +50,8 @@ async fn execute_create_message_events_sql(
                             user_addr: user_addr.clone(),
                             creation_timestamp: stat.creation_timestamp,
                             last_update_timestamp: stat.last_update_timestamp,
-                            user_point: stat.user_point + new_message_count * POINT_PER_NEW_MESSAGE,
+                            user_points: stat.user_points
+                                + new_message_count * POINT_PER_NEW_MESSAGE,
                             created_messages: stat.created_messages + new_message_count,
                             updated_messages: stat.updated_messages,
                         },
@@ -58,7 +59,7 @@ async fn execute_create_message_events_sql(
                             user_addr: user_addr.clone(),
                             creation_timestamp: 0,
                             last_update_timestamp: 0,
-                            user_point: new_message_count * POINT_PER_NEW_MESSAGE,
+                            user_points: new_message_count * POINT_PER_NEW_MESSAGE,
                             created_messages: *new_message_count,
                             updated_messages: 0,
                         },
@@ -74,7 +75,7 @@ async fn execute_create_message_events_sql(
                     user_stats::creation_timestamp.eq(excluded(user_stats::creation_timestamp)),
                     user_stats::last_update_timestamp
                         .eq(excluded(user_stats::last_update_timestamp)),
-                    user_stats::user_point.eq(excluded(user_stats::user_point)),
+                    user_stats::user_points.eq(excluded(user_stats::user_points)),
                     user_stats::created_messages.eq(excluded(user_stats::created_messages)),
                     user_stats::updated_messages.eq(excluded(user_stats::updated_messages)),
                 ));

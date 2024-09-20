@@ -11,7 +11,7 @@ pub struct UserStat {
     pub user_addr: String,
     pub creation_timestamp: i64,
     pub last_update_timestamp: i64,
-    pub user_point: i64,
+    pub user_points: i64,
     pub created_messages: i64,
     pub updated_messages: i64,
 }
