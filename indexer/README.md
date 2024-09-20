@@ -134,3 +134,9 @@ Video walkthrough: https://drive.google.com/file/d/1JayWuH2qgnqOgzVuZm9MwKT42hj4
 Go to cloud run dashboard, create a new service, and select the container image from Artifact Registry, also add a volume to ready the config.yaml file from Secret Manager, then mount the volume to the container.
 
 **NOTE**: always allocate cpu so it always runs instead of only run when there is traffic. Min and max instances should be 1.
+
+## Re-indexing
+
+If you make change to DB schema or update the point calculation logic, you need to re-index the data.
+
+**WARNING**: Do not try to backfill the data, the point data logic is read + update, if you backfill like processing same events twice, you will get wrong point data. So please always revert all migrations and re-index from the first tx your contract deployed.

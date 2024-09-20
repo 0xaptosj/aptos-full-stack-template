@@ -50,6 +50,12 @@ async fn execute_update_message_events_sql(
                 );
             update_message_query.execute(conn).await?;
 
+            /*
+            Do not try to backfill data (i.e. process same event twice), you would mess up the user stats.
+            Instead, if you want to change the point calculation logic, you should delete all data and re-index from scratch.
+            You can delete all data by revert all DB migrations, see README.md for more details.
+             */
+
             let current_user_stats: AHashMap<String, UserStat> = user_stats::table
                 .filter(user_stats::user_addr.eq_any(user_updated_message_counts.keys()))
                 .load::<UserStat>(conn)
