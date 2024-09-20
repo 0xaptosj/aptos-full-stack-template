@@ -7,11 +7,11 @@ use aptos_indexer_processor_sdk::{
 };
 use async_trait::async_trait;
 
-use super::storers::{
+use super::{events_extractor::ContractEvent, storers::{
     create_message_event_storer::process_create_message_events,
     update_message_event_storer::process_update_message_events,
-};
-use crate::{db_models::events_models::ContractEvent, utils::database_utils::ArcDbPool};
+}};
+use crate::utils::database_utils::ArcDbPool;
 
 /// EventsStorer is a step that inserts events in the database.
 pub struct EventsStorer
@@ -32,20 +32,6 @@ impl NamedStep for EventsStorer {
 impl EventsStorer {
     pub fn new(pool: ArcDbPool) -> Self {
         Self { pool }
-    }
-}
-
-pub enum EventStorerAction {
-    CreateMessage,
-    UpdateMessage,
-}
-
-impl Clone for EventStorerAction {
-    fn clone(&self) -> Self {
-        match self {
-            EventStorerAction::CreateMessage => EventStorerAction::CreateMessage,
-            EventStorerAction::UpdateMessage => EventStorerAction::UpdateMessage,
-        }
     }
 }
 
