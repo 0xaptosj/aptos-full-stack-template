@@ -35,6 +35,11 @@ impl EventsStorer {
     }
 }
 
+pub enum EventStorerAction {
+    CreateMessage,
+    UpdateMessage,
+}
+
 #[async_trait]
 impl Processable for EventsStorer {
     type Input = ContractEvent;

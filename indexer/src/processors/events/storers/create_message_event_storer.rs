@@ -14,7 +14,7 @@ use crate::{
     },
 };
 
-async fn create_message_events_sql(
+pub async fn create_message_events_sql(
     conn: &mut MyDbConnection,
     items_to_insert: Vec<Message>,
 ) -> Vec<impl QueryFragment<Pg> + diesel::query_builder::QueryId + Send> {

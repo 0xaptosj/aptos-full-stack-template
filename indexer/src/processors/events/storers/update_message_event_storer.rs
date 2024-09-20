@@ -16,7 +16,7 @@ use crate::{
     },
 };
 
-async fn update_message_events_sql(
+pub async fn update_message_events_sql(
     conn: &mut MyDbConnection,
     items_to_insert: Vec<Message>,
 ) -> Vec<impl QueryFragment<Pg> + diesel::query_builder::QueryId + Send> {
@@ -75,8 +75,7 @@ pub async fn process_update_message_events(
 
     let update_result = execute_in_chunks(
         pool.clone(),
-        // update_message_events_sql,
-        |conn, items| async move { update_message_events_sql(conn, items).await },
+        update_message_events_sql,
         &filtered_update_events,
         get_config_table_chunk_size::<Message>("messages", &per_table_chunk_sizes),
     )
