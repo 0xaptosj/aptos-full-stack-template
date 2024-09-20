@@ -50,18 +50,20 @@ async fn execute_create_message_events_sql(
                             user_addr: user_addr.clone(),
                             creation_timestamp: stat.creation_timestamp,
                             last_update_timestamp: stat.last_update_timestamp,
-                            user_points: stat.user_points
-                                + new_message_count * POINT_PER_NEW_MESSAGE,
                             created_messages: stat.created_messages + new_message_count,
                             updated_messages: stat.updated_messages,
+                            s1_points: stat.s1_points + new_message_count * POINT_PER_NEW_MESSAGE,
+                            total_points: stat.total_points
+                                + new_message_count * POINT_PER_NEW_MESSAGE,
                         },
                         None => UserStat {
                             user_addr: user_addr.clone(),
                             creation_timestamp: 0,
                             last_update_timestamp: 0,
-                            user_points: new_message_count * POINT_PER_NEW_MESSAGE,
                             created_messages: *new_message_count,
                             updated_messages: 0,
+                            s1_points: new_message_count * POINT_PER_NEW_MESSAGE,
+                            total_points: new_message_count * POINT_PER_NEW_MESSAGE,
                         },
                     },
                 )
@@ -75,9 +77,10 @@ async fn execute_create_message_events_sql(
                     user_stats::creation_timestamp.eq(excluded(user_stats::creation_timestamp)),
                     user_stats::last_update_timestamp
                         .eq(excluded(user_stats::last_update_timestamp)),
-                    user_stats::user_points.eq(excluded(user_stats::user_points)),
                     user_stats::created_messages.eq(excluded(user_stats::created_messages)),
                     user_stats::updated_messages.eq(excluded(user_stats::updated_messages)),
+                    user_stats::s1_points.eq(excluded(user_stats::s1_points)),
+                    user_stats::total_points.eq(excluded(user_stats::total_points)),
                 ));
             update_user_point_query.execute(conn).await?;
 

@@ -35,9 +35,10 @@ diesel::table! {
         user_addr -> Varchar,
         creation_timestamp -> Int8,
         last_update_timestamp -> Int8,
-        user_points -> Int8,
         created_messages -> Int8,
         updated_messages -> Int8,
+        s1_points -> Int8,
+        total_points -> Int8,
     }
 }
 
