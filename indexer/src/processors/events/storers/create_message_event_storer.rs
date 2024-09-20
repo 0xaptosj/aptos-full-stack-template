@@ -7,6 +7,7 @@ use tracing::error;
 
 use crate::{
     db_models::events_models::{Message, UserPoint},
+    processors::events::events_storer::EventStorerAction,
     schema::{messages, user_points},
     utils::{
         database_execution::execute_in_chunks,
@@ -86,7 +87,7 @@ pub async fn process_create_message_events(
 ) -> Result<(), ProcessorError> {
     let create_result = execute_in_chunks(
         pool.clone(),
-        create_message_events_sql,
+        EventStorerAction::CreateMessage,
         &create_events,
         get_config_table_chunk_size::<Message>("messages", &per_table_chunk_sizes),
     )

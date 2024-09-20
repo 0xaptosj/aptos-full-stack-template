@@ -8,12 +8,10 @@ use diesel::{
 use tracing::error;
 
 use crate::{
-    db_models::events_models::Message,
-    schema::messages,
-    utils::{
+    db_models::events_models::Message, processors::events::events_storer::EventStorerAction, schema::messages, utils::{
         database_execution::execute_in_chunks,
         database_utils::{get_config_table_chunk_size, ArcDbPool, MyDbConnection},
-    },
+    }
 };
 
 pub async fn update_message_events_sql(
@@ -75,7 +73,7 @@ pub async fn process_update_message_events(
 
     let update_result = execute_in_chunks(
         pool.clone(),
-        update_message_events_sql,
+        EventStorerAction::UpdateMessage,
         &filtered_update_events,
         get_config_table_chunk_size::<Message>("messages", &per_table_chunk_sizes),
     )

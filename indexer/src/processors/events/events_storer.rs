@@ -40,6 +40,15 @@ pub enum EventStorerAction {
     UpdateMessage,
 }
 
+impl Clone for EventStorerAction {
+    fn clone(&self) -> Self {
+        match self {
+            EventStorerAction::CreateMessage => EventStorerAction::CreateMessage,
+            EventStorerAction::UpdateMessage => EventStorerAction::UpdateMessage,
+        }
+    }
+}
+
 #[async_trait]
 impl Processable for EventsStorer {
     type Input = ContractEvent;

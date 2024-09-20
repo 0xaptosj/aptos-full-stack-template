@@ -21,14 +21,13 @@ use crate::{
     },
 };
 
-pub async fn execute_in_chunks<U, T>(
+pub async fn execute_in_chunks<T>(
     pool: ArcDbPool,
     action: EventStorerAction,
     items_to_insert: &[T],
     chunk_size: usize,
 ) -> Result<(), DieselError>
 where
-    U: QueryFragment<Backend> + QueryId + Send + 'static,
     T: Serialize + for<'de> Deserialize<'de> + Clone + Send + 'static,
 {
     let tasks = items_to_insert
@@ -36,7 +35,8 @@ where
         .map(|chunk| {
             let pool = pool.clone();
             let items = chunk.to_vec();
-            tokio::spawn(async move { execute_or_retry_cleaned(pool, action, items).await })
+            let action = action.clone();
+            tokio::spawn(async move { execute_or_retry_cleaned(pool, &action, items).await })
         })
         .collect::<Vec<_>>();
 
@@ -50,13 +50,12 @@ where
     Ok(())
 }
 
-pub async fn execute_or_retry_cleaned<U, T>(
+pub async fn execute_or_retry_cleaned<T>(
     pool: ArcDbPool,
-    action: EventStorerAction,
+    action: &EventStorerAction,
     items: Vec<T>,
 ) -> Result<(), DieselError>
 where
-    U: QueryFragment<Backend> + QueryId + Send,
     T: Serialize + for<'de> Deserialize<'de> + Clone,
 {
     let cloned_pool_1 = pool.clone();
@@ -96,14 +95,14 @@ where
     Ok(())
 }
 
-pub async fn build_query_and_execute_with_better_error_conn<U, T>(
+pub async fn build_query_and_execute_with_better_error_conn<T, U>(
     conn: &mut MyDbConnection,
-    action: EventStorerAction,
+    action: &EventStorerAction,
     items: Vec<T>,
 ) -> QueryResult<()>
 where
-    U: QueryFragment<Backend> + QueryId + Send,
     T: Serialize + for<'de> Deserialize<'de> + Clone,
+    U: QueryFragment<Backend> + QueryId + Send,
 {
     let queries = match action {
         EventStorerAction::CreateMessage => create_message_events_sql(conn, items).await,
