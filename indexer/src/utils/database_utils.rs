@@ -1,5 +1,4 @@
 use ahash::AHashMap;
-use aptos_indexer_processor_sdk::utils::convert::remove_null_bytes;
 use diesel_async::{
     pooled_connection::bb8::{Pool, PooledConnection},
     AsyncPgConnection,
@@ -26,17 +25,4 @@ pub fn get_config_table_chunk_size<T: field_count::FieldCount>(
         .get(table_name)
         .copied()
         .unwrap_or_else(|| MAX_DIESEL_PARAM_SIZE / T::field_count())
-}
-
-/// This function will clean the data for postgres. Currently it has support for removing
-/// null bytes from strings but in the future we will add more functionality.
-pub fn clean_data_for_db<T: serde::Serialize + for<'de> serde::Deserialize<'de>>(
-    items: Vec<T>,
-    should_remove_null_bytes: bool,
-) -> Vec<T> {
-    if should_remove_null_bytes {
-        items.iter().map(remove_null_bytes).collect()
-    } else {
-        items
-    }
 }

@@ -4,7 +4,7 @@ use tracing::info;
 use super::database_utils::ArcDbPool;
 use crate::{
     db_models::ledger_info::LedgerInfo, schema::ledger_infos,
-    utils::database_execution::execute_with_better_error_conn,
+    utils::database_execution::execute_with_better_error,
 };
 
 /// Verify the chain id from GRPC against the database.
@@ -40,7 +40,7 @@ pub async fn check_or_update_chain_id(grpc_chain_id: i64, db_pool: ArcDbPool) ->
                     chain_id: grpc_chain_id,
                 })
                 .on_conflict_do_nothing();
-            execute_with_better_error_conn(&mut conn, vec![query])
+            execute_with_better_error(&mut conn, vec![query])
                 .await
                 .context("Error updating chain_id!")
                 .map(|_| grpc_chain_id as u64)

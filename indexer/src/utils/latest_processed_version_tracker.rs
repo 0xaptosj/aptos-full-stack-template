@@ -6,7 +6,12 @@ use aptos_indexer_processor_sdk::{
     utils::{errors::ProcessorError, time::parse_timestamp},
 };
 use async_trait::async_trait;
-use diesel::{query_dsl::methods::FilterDsl, upsert::excluded, ExpressionMethods};
+use diesel::{
+    query_dsl::methods::FilterDsl,
+    result::{self, DatabaseErrorKind},
+    upsert::excluded,
+    ExpressionMethods,
+};
 
 use super::{
     database_connection::new_db_pool, database_execution::execute_with_better_error,
@@ -98,7 +103,19 @@ where
                     processor_status::last_success_version
                         .lt(excluded(processor_status::last_success_version)),
                 );
-            execute_with_better_error(self.pool.clone(), vec![query])
+            let conn = &mut self
+                .pool
+                .get()
+                .await
+                .map_err(|e| {
+                    tracing::warn!("Error getting connection from pool: {:?}", e);
+                    result::Error::DatabaseError(
+                        DatabaseErrorKind::UnableToSendCommand,
+                        Box::new(e.to_string()),
+                    )
+                })
+                .unwrap();
+            execute_with_better_error(conn, vec![query])
                 .await
                 .map_err(|e| ProcessorError::DBStoreError {
                     message: format!("Failed to update processor status: {}", e),
