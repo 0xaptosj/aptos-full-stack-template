@@ -4,15 +4,15 @@ This is a [Next.js](https://nextjs.org/) project bootstrapped with [`create-next
 
 ## Local development
 
-This template uses `@vercel/postgres` to connect to a Postgres database. When testing locally, it cannot connect to local DB. You have to either use a cloud DB on Vercel or a local DB in Docker. I highly recommend using an independent cloud DB on Vercel. You can learn more on [Vercel docs](https://vercel.com/docs/storage/vercel-postgres/local-development).
+This template uses `@neondatabase/serverless` to connect to a Postgres database. When testing locally, you can connect to a dev branch of neon DB.
 
 ## Create a read only user in DB
 
-This frontend should only read from the DB, the indexer is the only one that writes to the DB. So, create a read only user in the DB for frontend to use for safety.
+Frontend should only read from the DB, the indexer is the only one that writes to the DB. So, create a read only user in the DB for frontend to use prevent any accidental write operations.
 
 ```sql
 -- Create a readonly user
--- Please don't use any special characters in the password to avoid @vercel/postgres give invalid connection string error
+-- Please don't use any special characters in the password to avoid db sdk give invalid connection string error
 CREATE USER readonly WITH PASSWORD 'strong_password'
 -- Grant readonly user read access to all tables in public schema
 GRANT SELECT ON ALL TABLES IN SCHEMA public TO readonly;

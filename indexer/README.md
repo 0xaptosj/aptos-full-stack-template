@@ -6,7 +6,7 @@ We use the term indexer and processor interchangeably.
 
 When developing locally, you can use a local Postgres DB and run the indexer locally.
 
-When deploying to the cloud, I recommend using [Vercel Postgres](https://vercel.com/docs/storage/vercel-postgres) or [Neon Postgres](https://neon.tech/) for database and Google Cloud Run for hosting indexer.
+When deploying to the cloud, I recommend using [Neon Postgres](https://neon.tech/) or Google Cloud SQL for database and Google Cloud Run for hosting indexer.
 
 ## Pre-requisites
 

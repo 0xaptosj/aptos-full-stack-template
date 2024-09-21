@@ -1,14 +1,12 @@
-import { sql } from "@vercel/postgres";
+import { getPostgresClient } from "@/lib/db";
 
 export const getLastSuccessVersion = async (): Promise<number> => {
-  const query = `SELECT last_success_version FROM processor_status`;
-  const { rows } = await sql.query(query, []);
+  const rows =
+    await getPostgresClient()`SELECT last_success_version FROM processor_status`;
   if (rows.length === 0) {
     throw new Error("Status not found");
   }
-  const status: {
-    last_success_version: number;
-  } = rows[0];
+  const last_success_version = rows[0].last_success_version;
 
-  return status.last_success_version;
+  return last_success_version;
 };

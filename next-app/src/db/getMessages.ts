@@ -1,5 +1,4 @@
-import { sql } from "@vercel/postgres";
-
+import { getPostgresClient } from "@/lib/db";
 import { MessageBoardColumns } from "@/lib/type/message";
 
 export type GetMessagesProps = {
@@ -18,10 +17,11 @@ export const getMessages = async ({
   messages: MessageBoardColumns[];
   totalMessages: number;
 }> => {
-  // vercel doesn't allow $1 $2 in the query string, so we do it like this
-  // we checked the type above to prevent sql injection
-  const query = `SELECT message_obj_addr, creation_timestamp, content FROM messages ORDER BY ${sortedBy} ${order} LIMIT $1 OFFSET $2`;
-  const { rows } = await sql.query(query, [limit, (page - 1) * limit]);
+  const sortedByAndOrder = `${sortedBy} ${order}`;
+  const rows =
+    await getPostgresClient()`SELECT message_obj_addr, creation_timestamp, content FROM messages ORDER BY ${sortedByAndOrder} LIMIT ${limit} OFFSET ${
+      (page - 1) * limit
+    }`;
   const messages = rows.map((row) => {
     return {
       message_obj_addr: row.message_obj_addr,
@@ -29,8 +29,11 @@ export const getMessages = async ({
       content: row.content,
     };
   });
-  const { rows: count } = await sql`
+
+  const rows2 = await getPostgresClient()`
         SELECT COUNT(*) FROM messages;
     `;
-  return { messages, totalMessages: count[0].count };
+  const count = rows2[0].count;
+
+  return { messages, totalMessages: count };
 };

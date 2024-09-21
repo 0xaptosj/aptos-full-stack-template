@@ -92,8 +92,6 @@ export function DataTable<TData, TValue>({
     return <div>Error: {error.message}</div>;
   }
 
-  console.log("data", data);
-
   return (
     <div className="space-y-4">
       <div className="rounded-md border">
