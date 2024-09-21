@@ -2,7 +2,7 @@ import { getPostgresClient } from "@/lib/db";
 
 export const getLastSuccessVersion = async (): Promise<number> => {
   const rows =
-    await getPostgresClient()`SELECT last_success_version FROM processor_status`;
+    await getPostgresClient()(`SELECT last_success_version FROM processor_status`);
   if (rows.length === 0) {
     throw new Error("Status not found");
   }

@@ -17,11 +17,12 @@ export const getMessages = async ({
   messages: MessageBoardColumns[];
   totalMessages: number;
 }> => {
-  const sortedByAndOrder = `${sortedBy} ${order}`;
-  const rows =
-    await getPostgresClient()`SELECT message_obj_addr, creation_timestamp, content FROM messages ORDER BY ${sortedByAndOrder} LIMIT ${limit} OFFSET ${
+  const rows = await getPostgresClient()(
+    `SELECT message_obj_addr, creation_timestamp, content FROM messages ORDER BY ${sortedBy} ${order} LIMIT ${limit} OFFSET ${
       (page - 1) * limit
-    }`;
+    }`
+  );
+
   const messages = rows.map((row) => {
     return {
       message_obj_addr: row.message_obj_addr,
@@ -30,9 +31,9 @@ export const getMessages = async ({
     };
   });
 
-  const rows2 = await getPostgresClient()`
+  const rows2 = await getPostgresClient()(`
         SELECT COUNT(*) FROM messages;
-    `;
+    `);
   const count = rows2[0].count;
 
   return { messages, totalMessages: count };
