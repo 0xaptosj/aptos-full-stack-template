@@ -4,19 +4,23 @@ This indexer is created from indexer-sdk, see a more detailed readme in [example
 
 We use the term indexer and processor interchangeably.
 
+When developing locally, you can use a local Postgres DB and run the indexer locally.
+
+When deploying to the cloud, I recommend using [Vercel Postgres](https://vercel.com/docs/storage/vercel-postgres) or [Neon Postgres](https://neon.tech/) for database and Google Cloud Run for hosting indexer.
+
 ## Pre-requisites
 
-Create a Vercel account and a Google Cloud account. We use Vercel to host the Postgres DB and Google Cloud to host the indexer.
+Install rust.
 
-Create a new Vercel Postgres DB and a new Google Cloud project.
-
-Learn more about Vercel Postgres on [their docs](https://vercel.com/docs/storage/vercel-postgres).
+Install postgres.
 
 Install diesel cli to run migrations.
 
 ```sh
 cargo install diesel_cli --no-default-features --features postgres
 ```
+
+Install docker because we need to put indexer in docker container when deploying to cloud.
 
 ## Running the indexer locally
 
