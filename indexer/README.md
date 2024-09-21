@@ -14,7 +14,7 @@ Install rust.
 
 Install postgres.
 
-Install diesel cli to run migrations.
+Install diesel cli to run migrations. Please only use this command to install diesel cli because we only need postgres feature.
 
 ```sh
 cargo install diesel_cli --no-default-features --features postgres
