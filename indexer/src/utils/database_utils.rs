@@ -5,11 +5,9 @@ use diesel_async::{
 };
 use std::sync::Arc;
 
-pub type Backend = diesel::pg::Pg;
-pub type MyDbConnection = AsyncPgConnection;
-pub type DbPool = Pool<MyDbConnection>;
+pub type DbPool = Pool<AsyncPgConnection>;
 pub type ArcDbPool = Arc<DbPool>;
-pub type DbPoolConnection<'a> = PooledConnection<'a, MyDbConnection>;
+pub type DbPoolConnection<'a> = PooledConnection<'a, AsyncPgConnection>;
 
 // the max is actually u16::MAX but we see that when the size is too big we get an overflow error so reducing it a bit
 const MAX_DIESEL_PARAM_SIZE: usize = (u16::MAX / 2) as usize;

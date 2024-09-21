@@ -2,36 +2,38 @@ use ahash::AHashMap;
 use anyhow::Result;
 use aptos_indexer_processor_sdk::utils::errors::ProcessorError;
 use diesel::{
-    query_dsl::methods::FilterDsl,
-    result::{self, DatabaseErrorKind},
-    upsert::excluded,
-    BoolExpressionMethods, ExpressionMethods, QueryResult,
+    insert_into, query_dsl::methods::FilterDsl, upsert::excluded, BoolExpressionMethods,
+    ExpressionMethods, QueryResult,
 };
-use diesel_async::{AsyncConnection, RunQueryDsl};
+use diesel_async::{AsyncConnection, AsyncPgConnection, RunQueryDsl};
 
 use crate::{
     db_models::{message::Message, user_stat::UserStat},
     schema::{messages, user_stats},
-    utils::database_utils::{get_config_table_chunk_size, ArcDbPool, MyDbConnection},
+    utils::{
+        database_connection::get_db_connection,
+        database_utils::{get_config_table_chunk_size, ArcDbPool},
+        time::current_unix_timestamp_in_seconds,
+    },
 };
 
 const POINT_PER_UPDATE_MESSAGE: i64 = 1;
 
 async fn execute_update_message_events_sql(
-    conn: &mut MyDbConnection,
+    conn: &mut AsyncPgConnection,
     items_to_insert: Vec<Message>,
-    user_updated_message_counts: AHashMap<String, i64>,
+    user_update_message_counts: AHashMap<String, i64>,
 ) -> QueryResult<()> {
     conn.transaction(|conn| {
         Box::pin(async move {
-            let update_message_query = diesel::insert_into(messages::table)
+            let update_message_query = insert_into(messages::table)
                 .values(items_to_insert.clone())
                 .on_conflict(messages::message_obj_addr)
                 .do_update()
                 .set((
-                    messages::message_obj_addr.eq(excluded(messages::message_obj_addr)),
-                    messages::creator_addr.eq(excluded(messages::creator_addr)),
-                    messages::creation_timestamp.eq(excluded(messages::creation_timestamp)),
+                    messages::message_obj_addr.eq(messages::message_obj_addr),
+                    messages::creator_addr.eq(messages::creator_addr),
+                    messages::creation_timestamp.eq(messages::creation_timestamp),
                     messages::last_update_timestamp.eq(excluded(messages::last_update_timestamp)),
                     messages::last_update_event_idx.eq(excluded(messages::last_update_event_idx)),
                     messages::content.eq(excluded(messages::content)),
@@ -51,60 +53,41 @@ async fn execute_update_message_events_sql(
             update_message_query.execute(conn).await?;
 
             /*
-            Do not try to backfill data (i.e. process same event twice), you would mess up the user stats.
+            DO NOT backfill data (i.e. process same event twice), you would mess up the user stat!!!!
             Instead, if you want to change the point calculation logic, you should delete all data and re-index from scratch.
             You can delete all data by revert all DB migrations, see README.md for more details.
              */
-
-            let current_user_stats: AHashMap<String, UserStat> = user_stats::table
-                .filter(user_stats::user_addr.eq_any(user_updated_message_counts.keys()))
-                .load::<UserStat>(conn)
-                .await?
-                .iter()
-                .map(|user_point| (user_point.user_addr.clone(), user_point.clone()))
-                .collect();
-            let updated_user_stats = user_updated_message_counts
-                .iter()
-                .map(
-                    |(user_addr, updated_message_count)| match current_user_stats.get(user_addr) {
-                        Some(stat) => UserStat {
+            let update_user_stat_query = insert_into(user_stats::table)
+                .values(
+                    user_update_message_counts
+                        .iter()
+                        .map(|(user_addr, update_message_count)| UserStat {
                             user_addr: user_addr.clone(),
-                            creation_timestamp: stat.creation_timestamp,
-                            last_update_timestamp: stat.last_update_timestamp,
-                            created_messages: stat.created_messages,
-                            updated_messages: stat.updated_messages + updated_message_count,
-                            s1_points: stat.s1_points
-                                + updated_message_count * POINT_PER_UPDATE_MESSAGE,
-                            total_points: stat.total_points
-                                + updated_message_count * POINT_PER_UPDATE_MESSAGE,
-                        },
-                        None => UserStat {
-                            user_addr: user_addr.clone(),
-                            creation_timestamp: 0,
-                            last_update_timestamp: 0,
+                            creation_timestamp: current_unix_timestamp_in_seconds(),
+                            last_update_timestamp: current_unix_timestamp_in_seconds(),
                             created_messages: 0,
-                            updated_messages: *updated_message_count,
-                            s1_points: updated_message_count * POINT_PER_UPDATE_MESSAGE,
-                            total_points: updated_message_count * POINT_PER_UPDATE_MESSAGE,
-                        },
-                    },
+                            updated_messages: *update_message_count,
+                            s1_points: update_message_count * POINT_PER_UPDATE_MESSAGE,
+                            total_points: update_message_count * POINT_PER_UPDATE_MESSAGE,
+                        })
+                        .collect::<Vec<_>>(),
                 )
-                .collect::<Vec<_>>();
-            let update_user_point_query = diesel::insert_into(user_stats::table)
-                .values(updated_user_stats)
                 .on_conflict(user_stats::user_addr)
                 .do_update()
                 .set((
-                    user_stats::user_addr.eq(excluded(user_stats::user_addr)),
-                    user_stats::creation_timestamp.eq(excluded(user_stats::creation_timestamp)),
+                    user_stats::user_addr.eq(user_stats::user_addr),
+                    user_stats::creation_timestamp.eq(user_stats::creation_timestamp),
                     user_stats::last_update_timestamp
                         .eq(excluded(user_stats::last_update_timestamp)),
-                    user_stats::created_messages.eq(excluded(user_stats::created_messages)),
-                    user_stats::updated_messages.eq(excluded(user_stats::updated_messages)),
-                    user_stats::s1_points.eq(excluded(user_stats::s1_points)),
-                    user_stats::total_points.eq(excluded(user_stats::total_points)),
+                    user_stats::created_messages.eq(user_stats::created_messages),
+                    user_stats::updated_messages
+                        .eq(user_stats::updated_messages + excluded(user_stats::updated_messages)),
+                    user_stats::s1_points
+                        .eq(user_stats::s1_points + excluded(user_stats::s1_points)),
+                    user_stats::total_points
+                        .eq(user_stats::total_points + excluded(user_stats::total_points)),
                 ));
-            update_user_point_query.execute(conn).await?;
+            update_user_stat_query.execute(conn).await?;
 
             Ok(())
         })
@@ -117,16 +100,16 @@ pub async fn process_update_message_events(
     per_table_chunk_sizes: AHashMap<String, usize>,
     update_events: Vec<Message>,
 ) -> Result<(), ProcessorError> {
-    let mut user_updated_message_counts: AHashMap<String, i64> = AHashMap::new();
+    let mut user_update_message_counts: AHashMap<String, i64> = AHashMap::new();
     for message in update_events.clone() {
-        let new_count = user_updated_message_counts
+        let new_count = user_update_message_counts
             .get(&message.creator_addr)
             .unwrap_or(&0)
             + 1;
-        user_updated_message_counts.insert(message.creator_addr.clone(), new_count);
+        user_update_message_counts.insert(message.creator_addr.clone(), new_count);
     }
 
-    // filter update_events so when there are 2 events updating the same record, only the latest one is sent to DB for update
+    // Filter update_events so when there are 2 events updating the same record, only the latest one is sent to DB for update
     // because we cannot update one record with 2 different values in the same transaction
     let mut filtered_update_events_map: AHashMap<String, Message> = AHashMap::new();
     for message in update_events {
@@ -152,20 +135,12 @@ pub async fn process_update_message_events(
         .map(|chunk| {
             let pool = pool.clone();
             let items = chunk.to_vec();
-            let user_updated_message_counts = user_updated_message_counts.clone();
+            let user_update_message_counts = user_update_message_counts.clone();
             tokio::spawn(async move {
-                let conn: &mut MyDbConnection = &mut pool
-                    .get()
-                    .await
-                    .map_err(|e| {
-                        tracing::warn!("Error getting connection from pool: {:?}", e);
-                        result::Error::DatabaseError(
-                            DatabaseErrorKind::UnableToSendCommand,
-                            Box::new(e.to_string()),
-                        )
-                    })
-                    .unwrap();
-                execute_update_message_events_sql(conn, items, user_updated_message_counts).await
+                let conn = &mut get_db_connection(&pool).await.expect(
+                    "Failed to get connection from pool while processing update message events",
+                );
+                execute_update_message_events_sql(conn, items, user_update_message_counts).await
             })
         })
         .collect::<Vec<_>>();
@@ -175,7 +150,7 @@ pub async fn process_update_message_events(
         .expect("Task panicked executing in chunks");
     for res in results {
         res.map_err(|e| {
-            tracing::warn!("Error running query: {:?}", e);
+            tracing::error!("Error running query: {:?}", e);
             ProcessorError::ProcessError {
                 message: e.to_string(),
             }

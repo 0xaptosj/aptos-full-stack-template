@@ -1,28 +1,22 @@
 use diesel::{
     debug_query,
+    pg::Pg,
     query_builder::{QueryFragment, QueryId},
     QueryResult,
 };
-use diesel_async::{AsyncConnection, RunQueryDsl};
-use tracing::{debug, warn};
-
-use super::database_utils::{Backend, MyDbConnection};
+use diesel_async::{AsyncConnection, AsyncPgConnection, RunQueryDsl};
 
 pub async fn execute_with_better_error<U>(
-    conn: &mut MyDbConnection,
+    conn: &mut AsyncPgConnection,
     queries: Vec<U>,
 ) -> QueryResult<()>
 where
-    U: QueryFragment<Backend> + QueryId + Send,
+    U: QueryFragment<Pg> + QueryId + Send,
 {
     let debug_query = queries
         .iter()
-        .map(|q| debug_query::<Backend, _>(q).to_string())
+        .map(|q| debug_query::<Pg, _>(q).to_string())
         .collect::<Vec<_>>();
-    debug!(
-        "Executing queries in one DB transaction atomically: {:?}",
-        debug_query
-    );
     let res = conn
         .transaction(|conn| {
             Box::pin(async move {
@@ -34,7 +28,7 @@ where
         })
         .await;
     if let Err(ref e) = res {
-        warn!("Error running query: {:?}\n{:?}", e, debug_query);
+        tracing::error!("Error running query: {:?}\n{:?}", e, debug_query);
     }
     res
 }

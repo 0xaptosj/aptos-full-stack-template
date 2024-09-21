@@ -7,7 +7,6 @@ use aptos_indexer_processor_sdk::{
 };
 use async_trait::async_trait;
 use rayon::prelude::*;
-use tracing::warn;
 
 use crate::db_models::message::{CreateMessageEventOnChain, Message, UpdateMessageEventOnChain};
 
@@ -52,7 +51,7 @@ impl Processable for EventsExtractor {
                 let txn_data = match txn.txn_data.as_ref() {
                     Some(data) => data,
                     None => {
-                        warn!(
+                        tracing::warn!(
                             transaction_version = txn_version,
                             "Transaction data doesn't exist"
                         );
