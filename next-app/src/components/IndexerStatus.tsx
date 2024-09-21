@@ -53,7 +53,7 @@ export const IndexerStatus = () => {
       <Tooltip>
         <TooltipTrigger>
           <div className="flex items-center justify-center">
-            {isHealthy ? "Indexer up to date" : "Indexer lagging"}
+            {isHealthy ? "Indexer up to date" : "Indexer syncing"}
             <div
               className={`w-3 h-3 rounded-full ml-2 ${
                 isHealthy ? "bg-green-500" : "bg-red-500"
