@@ -3,6 +3,7 @@ use anyhow::Result;
 use aptos_indexer_processor_sdk::utils::errors::ProcessorError;
 use diesel::{insert_into, upsert::excluded, ExpressionMethods, QueryResult};
 use diesel_async::{AsyncConnection, AsyncPgConnection, RunQueryDsl};
+use std::cmp;
 
 use crate::{
     db_models::{message::Message, user_stat::UserStat},
@@ -10,7 +11,6 @@ use crate::{
     utils::{
         database_connection::get_db_connection,
         database_utils::{get_config_table_chunk_size, ArcDbPool},
-        time::current_unix_timestamp_in_seconds,
     },
 };
 
@@ -19,7 +19,7 @@ const POINT_PER_NEW_MESSAGE: i64 = 2;
 async fn execute_create_message_events_sql(
     conn: &mut AsyncPgConnection,
     items_to_insert: Vec<Message>,
-    user_new_message_counts: AHashMap<String, i64>,
+    user_stats_changes: AHashMap<String, (i64, i64, i64)>,
 ) -> QueryResult<()> {
     conn.transaction(|conn| {
         Box::pin(async move {
@@ -36,17 +36,26 @@ async fn execute_create_message_events_sql(
              */
             let update_user_stat_query = insert_into(user_stats::table)
                 .values(
-                    user_new_message_counts
+                    user_stats_changes
                         .iter()
-                        .map(|(user_addr, new_message_count)| UserStat {
-                            user_addr: user_addr.clone(),
-                            creation_timestamp: current_unix_timestamp_in_seconds(),
-                            last_update_timestamp: current_unix_timestamp_in_seconds(),
-                            created_messages: *new_message_count,
-                            updated_messages: 0,
-                            s1_points: new_message_count * POINT_PER_NEW_MESSAGE,
-                            total_points: new_message_count * POINT_PER_NEW_MESSAGE,
-                        })
+                        .map(
+                            |(
+                                user_addr,
+                                (
+                                    new_message_count,
+                                    earliest_message_creation_time,
+                                    latest_message_creation_time,
+                                ),
+                            )| UserStat {
+                                user_addr: user_addr.clone(),
+                                creation_timestamp: *earliest_message_creation_time,
+                                last_update_timestamp: *latest_message_creation_time,
+                                created_messages: *new_message_count,
+                                updated_messages: 0,
+                                s1_points: new_message_count * POINT_PER_NEW_MESSAGE,
+                                total_points: new_message_count * POINT_PER_NEW_MESSAGE,
+                            },
+                        )
                         .collect::<Vec<_>>(),
                 )
                 .on_conflict(user_stats::user_addr)
@@ -77,13 +86,22 @@ pub async fn process_create_message_events(
     per_table_chunk_sizes: AHashMap<String, usize>,
     create_events: Vec<Message>,
 ) -> Result<(), ProcessorError> {
-    let mut user_new_message_counts: AHashMap<String, i64> = AHashMap::new();
+    // Key is user address
+    // Value is (number of new messages, earliest create message time, latest create message time)
+    let mut user_stats_changes: AHashMap<String, (i64, i64, i64)> = AHashMap::new();
     for message in create_events.clone() {
-        let new_count = user_new_message_counts
+        let (new_count, earliest_time, latest_time) = user_stats_changes
             .get(&message.creator_addr)
-            .unwrap_or(&0)
-            + 1;
-        user_new_message_counts.insert(message.creator_addr.clone(), new_count);
+            .cloned()
+            .unwrap_or((0, i64::MAX, 0));
+        user_stats_changes.insert(
+            message.creator_addr.clone(),
+            (
+                new_count + 1,
+                cmp::min(earliest_time, message.creation_timestamp),
+                cmp::max(latest_time, message.creation_timestamp),
+            ),
+        );
     }
 
     let chunk_size = get_config_table_chunk_size::<Message>("messages", &per_table_chunk_sizes);
@@ -92,12 +110,12 @@ pub async fn process_create_message_events(
         .map(|chunk| {
             let pool = pool.clone();
             let items = chunk.to_vec();
-            let user_new_message_counts = user_new_message_counts.clone();
+            let user_stats_changes = user_stats_changes.clone();
             tokio::spawn(async move {
                 let conn = &mut get_db_connection(&pool).await.expect(
                     "Failed to get connection from pool while processing create message events",
                 );
-                execute_create_message_events_sql(conn, items, user_new_message_counts).await
+                execute_create_message_events_sql(conn, items, user_stats_changes).await
             })
         })
         .collect::<Vec<_>>();

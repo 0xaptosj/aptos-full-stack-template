@@ -1,3 +1,5 @@
+use std::cmp;
+
 use ahash::AHashMap;
 use anyhow::Result;
 use aptos_indexer_processor_sdk::utils::errors::ProcessorError;
@@ -13,7 +15,6 @@ use crate::{
     utils::{
         database_connection::get_db_connection,
         database_utils::{get_config_table_chunk_size, ArcDbPool},
-        time::current_unix_timestamp_in_seconds,
     },
 };
 
@@ -22,7 +23,7 @@ const POINT_PER_UPDATE_MESSAGE: i64 = 1;
 async fn execute_update_message_events_sql(
     conn: &mut AsyncPgConnection,
     items_to_insert: Vec<Message>,
-    user_update_message_counts: AHashMap<String, i64>,
+    user_stats_changes: AHashMap<String, (i64, i64)>,
 ) -> QueryResult<()> {
     conn.transaction(|conn| {
         Box::pin(async move {
@@ -59,17 +60,23 @@ async fn execute_update_message_events_sql(
              */
             let update_user_stat_query = insert_into(user_stats::table)
                 .values(
-                    user_update_message_counts
+                    user_stats_changes
                         .iter()
-                        .map(|(user_addr, update_message_count)| UserStat {
-                            user_addr: user_addr.clone(),
-                            creation_timestamp: current_unix_timestamp_in_seconds(),
-                            last_update_timestamp: current_unix_timestamp_in_seconds(),
-                            created_messages: 0,
-                            updated_messages: *update_message_count,
-                            s1_points: update_message_count * POINT_PER_UPDATE_MESSAGE,
-                            total_points: update_message_count * POINT_PER_UPDATE_MESSAGE,
-                        })
+                        .map(
+                            |(user_addr, (update_message_count, latest_message_update_time))| {
+                                UserStat {
+                                    user_addr: user_addr.clone(),
+                                    // This value doesn't matter because we always use the original DB value for creation_timestamp
+                                    creation_timestamp: 0,
+                                    last_update_timestamp: *latest_message_update_time,
+                                    // This value doesn't matter because we always use the original DB value for created_messages
+                                    created_messages: 0,
+                                    updated_messages: *update_message_count,
+                                    s1_points: update_message_count * POINT_PER_UPDATE_MESSAGE,
+                                    total_points: update_message_count * POINT_PER_UPDATE_MESSAGE,
+                                }
+                            },
+                        )
                         .collect::<Vec<_>>(),
                 )
                 .on_conflict(user_stats::user_addr)
@@ -100,13 +107,21 @@ pub async fn process_update_message_events(
     per_table_chunk_sizes: AHashMap<String, usize>,
     update_events: Vec<Message>,
 ) -> Result<(), ProcessorError> {
-    let mut user_update_message_counts: AHashMap<String, i64> = AHashMap::new();
+    // Key is user address
+    // Value is (number of new messages, latest update message time)
+    let mut user_stats_changes: AHashMap<String, (i64, i64)> = AHashMap::new();
     for message in update_events.clone() {
-        let new_count = user_update_message_counts
+        let (update_count, latest_time) = user_stats_changes
             .get(&message.creator_addr)
-            .unwrap_or(&0)
-            + 1;
-        user_update_message_counts.insert(message.creator_addr.clone(), new_count);
+            .cloned()
+            .unwrap_or((0, 0));
+        user_stats_changes.insert(
+            message.creator_addr.clone(),
+            (
+                update_count + 1,
+                cmp::max(latest_time, message.last_update_timestamp),
+            ),
+        );
     }
 
     // Filter update_events so when there are 2 events updating the same record, only the latest one is sent to DB for update
@@ -135,12 +150,12 @@ pub async fn process_update_message_events(
         .map(|chunk| {
             let pool = pool.clone();
             let items = chunk.to_vec();
-            let user_update_message_counts = user_update_message_counts.clone();
+            let user_stats_changes = user_stats_changes.clone();
             tokio::spawn(async move {
                 let conn = &mut get_db_connection(&pool).await.expect(
                     "Failed to get connection from pool while processing update message events",
                 );
-                execute_update_message_events_sql(conn, items, user_update_message_counts).await
+                execute_update_message_events_sql(conn, items, user_stats_changes).await
             })
         })
         .collect::<Vec<_>>();
