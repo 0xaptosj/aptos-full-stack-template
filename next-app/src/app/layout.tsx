@@ -10,6 +10,7 @@ import { PropsWithChildren } from "react";
 import { RootHeader } from "@/components/RootHeader";
 import { WrongNetworkAlert } from "@/components/WrongNetworkAlert";
 import { QueryProvider } from "@/components/providers/QueryProvider";
+import { RootFooter } from "@/components/RootFooter";
 
 const fontSans = FontSans({
   subsets: ["latin"],
@@ -17,9 +18,8 @@ const fontSans = FontSans({
 });
 
 export const metadata: Metadata = {
-  title: "Aptos Wallet Adapter Example",
-  description:
-    "An example of how to use Aptos Wallet Adapter with React and Next.js.",
+  title: "Aptos Full Stack Demo",
+  description: "An demo of a full stack app on Aptos",
 };
 
 const RootLayout = ({ children }: PropsWithChildren) => {
@@ -44,6 +44,7 @@ const RootLayout = ({ children }: PropsWithChildren) => {
                 <RootHeader />
                 {children}
                 <Toaster />
+                <RootFooter />
               </main>
             </WalletProvider>
           </QueryProvider>

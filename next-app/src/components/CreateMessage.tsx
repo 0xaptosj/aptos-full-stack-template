@@ -28,7 +28,7 @@ const FormSchema = z.object({
   stringContent: z.string(),
 });
 
-export function PostMessageWithSurf() {
+export function CreateMessage() {
   const { toast } = useToast();
   const { connected, account } = useWallet();
   const { client: walletClient } = useWalletClient();
@@ -90,7 +90,7 @@ export function PostMessageWithSurf() {
         <Form {...form}>
           <form
             onSubmit={form.handleSubmit(onSignAndSubmitTransaction)}
-            className="grid justify-between gap-4 grid-cols-2 w-full"
+            className="flex flex-col justify-between gap-4 w-full"
           >
             <FormField
               control={form.control}
