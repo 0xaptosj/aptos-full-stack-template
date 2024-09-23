@@ -24,7 +24,7 @@ import {
 } from "@/components/ui/table";
 
 import { DataTablePagination } from "@/components/ui/data-table-pagination";
-import { getMessagesOnServer } from "@/app/actions";
+import { getUserStatsOnServer } from "@/app/actions";
 import { useQuery } from "@tanstack/react-query";
 
 interface DataTableProps<TData, TValue> {
@@ -35,7 +35,7 @@ export function DataTable<TData, TValue>({
   columns,
 }: DataTableProps<TData, TValue>) {
   const [sorting, setSorting] = React.useState<SortingState>([
-    { id: "creation_timestamp", desc: true },
+    { id: "total_points", desc: true },
   ]);
   const [{ pageIndex, pageSize }, setPagination] = React.useState({
     pageIndex: 0,
@@ -43,16 +43,16 @@ export function DataTable<TData, TValue>({
   });
 
   const fetchData = async () => {
-    return await getMessagesOnServer({
+    return await getUserStatsOnServer({
       page: pageIndex + 1,
       limit: pageSize,
-      sortedBy: sorting[0]?.id as "creation_timestamp",
+      sortedBy: sorting[0]?.id as "total_points",
       order: sorting[0]?.desc ? "DESC" : "ASC",
     });
   };
 
   const { data, isLoading, isError, error } = useQuery({
-    queryKey: ["messages", pageIndex, pageSize, sorting],
+    queryKey: ["user_stats", pageIndex, pageSize, sorting],
     queryFn: fetchData,
   });
 
@@ -65,7 +65,7 @@ export function DataTable<TData, TValue>({
   );
 
   const table = useReactTable({
-    data: (data?.messages as TData[]) || [],
+    data: (data?.userStats as TData[]) || [],
     columns,
     state: {
       sorting,

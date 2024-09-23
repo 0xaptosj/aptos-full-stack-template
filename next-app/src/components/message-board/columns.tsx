@@ -2,11 +2,11 @@
 
 import { ColumnDef } from "@tanstack/react-table";
 
-import { DataTableColumnHeader } from "@/components/message-board/data-table-column-header";
+import { DataTableColumnHeader } from "@/components/ui/data-table-column-header";
 import { DataTableRowActions } from "@/components/message-board/data-table-row-actions";
-import { MessageBoardColumns } from "@/lib/type/message";
+import { Message } from "@/lib/type/message";
 
-export const columns: ColumnDef<MessageBoardColumns>[] = [
+export const columns: ColumnDef<Message>[] = [
   {
     accessorKey: "content",
     header: ({ column }) => (

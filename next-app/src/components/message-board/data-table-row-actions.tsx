@@ -10,10 +10,10 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { MessageBoardColumns } from "@/lib/type/message";
+import { Message } from "@/lib/type/message";
 
 interface DataTableRowActionsProps {
-  row: Row<MessageBoardColumns>;
+  row: Row<Message>;
 }
 
 export function DataTableRowActions({ row }: DataTableRowActionsProps) {

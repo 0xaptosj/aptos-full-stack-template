@@ -1,5 +1,5 @@
 import { getPostgresClient } from "@/lib/db";
-import { MessageBoardColumns } from "@/lib/type/message";
+import { Message } from "@/lib/type/message";
 
 export type GetMessagesProps = {
   page: number;
@@ -14,11 +14,11 @@ export const getMessages = async ({
   sortedBy,
   order,
 }: GetMessagesProps): Promise<{
-  messages: MessageBoardColumns[];
-  totalMessages: number;
+  messages: Message[];
+  total: number;
 }> => {
   const rows = await getPostgresClient()(
-    `SELECT message_obj_addr, creation_timestamp, content FROM messages ORDER BY ${sortedBy} ${order} LIMIT ${limit} OFFSET ${
+    `SELECT * FROM messages ORDER BY ${sortedBy} ${order} LIMIT ${limit} OFFSET ${
       (page - 1) * limit
     }`
   );
@@ -26,8 +26,11 @@ export const getMessages = async ({
   const messages = rows.map((row) => {
     return {
       message_obj_addr: row.message_obj_addr,
-      creation_timestamp: row.creation_timestamp,
+      creation_timestamp: parseInt(row.creation_timestamp),
       content: row.content,
+      creator_addr: row.creator_addr,
+      last_update_timestamp: parseInt(row.last_update_timestamp),
+      last_update_event_idx: parseInt(row.last_update_event_idx),
     };
   });
 
@@ -36,5 +39,5 @@ export const getMessages = async ({
     `);
   const count = rows2[0].count;
 
-  return { messages, totalMessages: count };
+  return { messages, total: count };
 };

@@ -3,7 +3,9 @@
 import { getLastSuccessVersion } from "@/db/getLastSuccessVersion";
 import { GetMessageProps, getMessage } from "@/db/getMessage";
 import { GetMessagesProps, getMessages } from "@/db/getMessages";
-import { MessageBoardColumns, MessageOnUi } from "@/lib/type/message";
+import { getUserStats, GetUserStatsProps } from "@/db/getUserStats";
+import { Message } from "@/lib/type/message";
+import { UserStat } from "@/lib/type/user_stats";
 
 export const getMessagesOnServer = async ({
   page,
@@ -11,8 +13,8 @@ export const getMessagesOnServer = async ({
   sortedBy,
   order,
 }: GetMessagesProps): Promise<{
-  messages: MessageBoardColumns[];
-  totalMessages: number;
+  messages: Message[];
+  total: number;
 }> => {
   return getMessages({ page, limit, sortedBy, order });
 };
@@ -20,11 +22,23 @@ export const getMessagesOnServer = async ({
 export const getMessageOnServer = async ({
   messageObjAddr,
 }: GetMessageProps): Promise<{
-  message: MessageOnUi;
+  message: Message;
 }> => {
   return getMessage({ messageObjAddr });
 };
 
 export const getLastVersionOnServer = async (): Promise<number> => {
   return getLastSuccessVersion();
+};
+
+export const getUserStatsOnServer = async ({
+  page,
+  limit,
+  sortedBy,
+  order,
+}: GetUserStatsProps): Promise<{
+  userStats: UserStat[];
+  total: number;
+}> => {
+  return getUserStats({ page, limit, sortedBy, order });
 };
