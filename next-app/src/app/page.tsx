@@ -1,11 +1,11 @@
 import { MessageBoard } from "@/components/MessageBoard";
-import { SendTransaction } from "@/components/SendTransaction";
+import { CreateMessage } from "@/components/CreateMessage";
 
 export default function HomePage() {
   return (
     <>
       <MessageBoard />
-      <SendTransaction />
+      <CreateMessage />
     </>
   );
 }

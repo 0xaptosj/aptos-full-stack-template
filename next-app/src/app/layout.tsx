@@ -10,6 +10,7 @@ import { PropsWithChildren } from "react";
 import { RootHeader } from "@/components/RootHeader";
 import { WrongNetworkAlert } from "@/components/WrongNetworkAlert";
 import { QueryProvider } from "@/components/providers/QueryProvider";
+import { RootFooter } from "@/components/RootFooter";
 
 const fontSans = FontSans({
   subsets: ["latin"],
@@ -44,6 +45,7 @@ const RootLayout = ({ children }: PropsWithChildren) => {
                 <RootHeader />
                 {children}
                 <Toaster />
+                <RootFooter />
               </main>
             </WalletProvider>
           </QueryProvider>
