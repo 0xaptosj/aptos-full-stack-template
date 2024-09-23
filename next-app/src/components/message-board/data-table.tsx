@@ -85,7 +85,7 @@ export function DataTable<TData, TValue>({
   });
 
   if (isLoading) {
-    return <div>Loading...</div>;
+    <div>Loading...</div>;
   }
 
   if (isError) {
@@ -93,7 +93,7 @@ export function DataTable<TData, TValue>({
   }
 
   return (
-    <div className="space-y-4">
+    <div>
       <div className="rounded-md border">
         <Table>
           <TableHeader>

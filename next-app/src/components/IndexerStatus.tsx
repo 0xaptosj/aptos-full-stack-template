@@ -38,7 +38,7 @@ export const IndexerStatus = () => {
   });
 
   if (isLoading || !data) {
-    return <div>Loading last indexer version</div>;
+    return <div>Loading indexer status</div>;
   }
 
   if (isError) {

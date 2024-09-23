@@ -94,7 +94,7 @@ export function UpdateMessage({ messageObjAddr }: UpdateMessageProps) {
         <Form {...form}>
           <form
             onSubmit={form.handleSubmit(onSignAndSubmitTransaction)}
-            className="flex flex-col justify-between gap-4 w-full"
+            className="flex flex-col justify-between gap-4 w-1/2"
           >
             <FormField
               control={form.control}

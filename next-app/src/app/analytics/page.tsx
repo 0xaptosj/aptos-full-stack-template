@@ -1,5 +1,9 @@
 import { Analytics } from "@/components/Analytics";
 
 export default function AnalyticsPage() {
-  return <Analytics />;
+  return (
+    <div className="space-y-4">
+      <Analytics />
+    </div>
+  );
 }

@@ -40,7 +40,7 @@ export function Message({ messageObjAddr }: MessageProps) {
   }
 
   return (
-    <>
+    <div className="flex flex-col gap-10">
       <Card>
         <CardHeader>
           <CardTitle>Message</CardTitle>
@@ -113,6 +113,6 @@ export function Message({ messageObjAddr }: MessageProps) {
           messageObjAddr={data.message.message_obj_addr as `0x${string}`}
         />
       )}
-    </>
+    </div>
   );
 }
