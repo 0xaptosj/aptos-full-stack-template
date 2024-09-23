@@ -18,9 +18,8 @@ const fontSans = FontSans({
 });
 
 export const metadata: Metadata = {
-  title: "Aptos Wallet Adapter Example",
-  description:
-    "An example of how to use Aptos Wallet Adapter with React and Next.js.",
+  title: "Aptos Full Stack Demo",
+  description: "An demo of a full stack app on Aptos",
 };
 
 const RootLayout = ({ children }: PropsWithChildren) => {

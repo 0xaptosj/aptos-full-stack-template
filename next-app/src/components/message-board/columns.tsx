@@ -1,7 +1,6 @@
 "use client";
 
 import { ColumnDef } from "@tanstack/react-table";
-import { truncateAddress } from "@aptos-labs/wallet-adapter-react";
 
 import { DataTableColumnHeader } from "@/components/message-board/data-table-column-header";
 import { DataTableRowActions } from "@/components/message-board/data-table-row-actions";
