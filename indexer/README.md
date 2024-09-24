@@ -22,6 +22,12 @@ cargo install diesel_cli --no-default-features --features postgres
 
 Install docker because we need to put indexer in docker container when deploying to cloud.
 
+Sign up for [Neon Postgres](https://neon.tech/) and create a new database.
+
+Sign up for [Aptos Build](https://developers.aptoslabs.com/), create a new project and get the API token.
+
+Sign up for Google Cloud and create a new project.
+
 ## Running the indexer locally
 
 **Note: all commends below need to be run in the current indexer directory instead of root directory.**
@@ -82,26 +88,17 @@ You should see the indexer start to index Aptos blockchain events!
 
 ## Get ready for cloud deployment
 
-I'm using GCP Cloud Run and Artifact Registry.
-
-You can learn more about publishing to Artifact Registry on their docs:
-
-- https://cloud.google.com/artifact-registry/docs/docker/pushing-and-pulling#pushing
-- https://cloud.google.com/artifact-registry/docs/docker/store-docker-container-images
-
-And deploying to Cloud Run:
-
-- https://cloud.google.com/run/docs/quickstarts/deploy-container
+We recommend using Google Cloud Run to host the indexer, Secret Manager to store `config.yaml` and Artifact Registry to store the indexer docker image.
 
 ### Build the docker image locally and run the container locally
 
-Build the docker image targeting linux/amd64 because eventually, we will push the image to Artifact Registry and deploy it to Cloud Run.
+Build the docker image targeting linux/amd64 because eventually, we will push the image to Artifact Registry and deploy it to Cloud Run, which only supports linux/amd64.
 
 ```sh
 docker build --platform linux/amd64 -t indexer .
 ```
 
-Run the docker container locally. Mac supports linux/amd64 emulation so you can run the container locally.
+You can run the docker container locally to make sure it works. Mac supports linux/amd64 emulation so you can run the x86 docker image on Mac.
 
 ```sh
 docker run -p 8080:8080 -it indexer
@@ -109,38 +106,49 @@ docker run -p 8080:8080 -it indexer
 
 ### Push the locally build docker image to Artifact Registry
 
-Tag the docker image.
-
-```sh
-docker tag indexer us-west2-docker.pkg.dev/indexer-sdk-demo/indexer-sdk-demo/indexer
-```
-
 Login to google cloud
 
 ```sh
 gcloud auth login
 ```
 
-Push the docker image to the container registry.
+Create a repo in the container registry and push to it. You can learn more about publishing to Artifact Registry on their [docs](https://cloud.google.com/artifact-registry/docs/docker/pushing-and-pulling#pushing).
+
+Authorize docker to push to Artifact Registry. Please update the region to your region.
 
 ```sh
-docker push us-west2-docker.pkg.dev/indexer-sdk-demo/indexer-sdk-demo/indexer
+# update us-west2 to your region, you can find it in google cloud
+gcloud auth configure-docker us-west2-docker.pkg.dev
+```
+
+Tag the docker image.
+
+```sh
+# update us-west2 to your region, you can find it in google cloud
+docker tag indexer us-west2-docker.pkg.dev/google-cloud-project-id/repo-name/indexer
+```
+
+Push to the Artifact Registry.
+
+```sh
+# update us-west2 to your region, you can find it in google cloud
+docker push us-west2-docker.pkg.dev/google-cloud-project-id/repo-name/indexer
 ```
 
 ### Upload the config.yaml file to Secret Manager
 
-Go to secret manager and create a new secret with the content of the config.yaml file.
+Go to secret manager and create a new secret using the `config.yaml` file. Please watch this video walkthrough carefully: https://drive.google.com/file/d/1bbwe617fqM31swqc9W5ck8G8eyg3H4H2/view?usp=sharing
 
 ### Run the container on Cloud Run
 
-Video walkthrough: https://drive.google.com/file/d/1JayWuH2qgnqOgzVuZm9MwKT42hj4z0JN/view
+Please watch this video walkthrough carefully and follow the exact same setup: https://drive.google.com/file/d/1JayWuH2qgnqOgzVuZm9MwKT42hj4z0JN/view.
 
 Go to cloud run dashboard, create a new service, and select the container image from Artifact Registry, also add a volume to ready the config.yaml file from Secret Manager, then mount the volume to the container.
 
-**NOTE**: always allocate cpu so it always runs instead of only run when there is traffic. Min and max instances should be 1.
+You can learn more about cloud run on their [docs](https://cloud.google.com/run/docs/quickstarts/deploy-container).
+
+**NOTE**: Always allocate CPU so it always runs instead of only run when there is traffic. Min and max instances should be 1.
 
 ## Re-indexing
 
-If you make change to DB schema or update the point calculation logic, you need to re-index the data.
-
-**WARNING**: Do not try to backfill the data, the point data logic is read + update, if you backfill like processing same events twice, you will get wrong point data. So please always revert all migrations and re-index from the first tx your contract deployed.
+**WARNING**: Do not ever try to backfill the data, logic like point calculation is incremental, if you backfill like processing same event twice, you will get wrong point data. So please always revert all migrations and re-index from the first tx your contract deployed.
