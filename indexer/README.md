@@ -137,7 +137,7 @@ docker push us-west2-docker.pkg.dev/google-cloud-project-id/repo-name/indexer
 
 ### Upload the config.yaml file to Secret Manager
 
-Go to secret manager and create a new secret using the `config.yaml` file. Please watch this video walkthrough carefully: https://drive.google.com/file/d/1bbwe617fqM31swqc9W5ck8G8eyg3H4H2/view?usp=sharing
+Go to secret manager and create a new secret using the `config.yaml` file. Please watch this video walkthrough carefully: https://drive.google.com/file/d/1bbwe617fqM31swqc9W5ck8G8eyg3H4H2/view
 
 ### Run the container on Cloud Run
 
