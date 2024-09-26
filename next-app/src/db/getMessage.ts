@@ -17,13 +17,5 @@ export const getMessage = async ({
     throw new Error("Message not found");
   }
   const message = rows[0] as Message;
-  const messageConverted = {
-    message_obj_addr: message.message_obj_addr as `0x${string}`,
-    creator_addr: message.creator_addr as `0x${string}`,
-    creation_timestamp: message.creation_timestamp,
-    last_update_timestamp: message.last_update_timestamp,
-    content: message.content,
-    last_update_event_idx: message.last_update_event_idx,
-  };
-  return { message: messageConverted };
+  return { message };
 };
