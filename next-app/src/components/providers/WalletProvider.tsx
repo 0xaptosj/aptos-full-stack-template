@@ -2,8 +2,8 @@
 
 import { AptosWalletAdapterProvider } from "@aptos-labs/wallet-adapter-react";
 import { PropsWithChildren } from "react";
-import { Network } from "@aptos-labs/ts-sdk";
-import { useToast } from "../ui/use-toast";
+import { useToast } from "@/components/ui/use-toast";
+import { NETWORK } from "@/lib/aptos";
 
 export const WalletProvider = ({ children }: PropsWithChildren) => {
   const { toast } = useToast();
@@ -11,13 +11,14 @@ export const WalletProvider = ({ children }: PropsWithChildren) => {
   return (
     <AptosWalletAdapterProvider
       autoConnect={true}
-      dappConfig={{
-        network: Network.TESTNET,
-        mizuwallet: {
-          manifestURL:
-            "https://assets.mz.xyz/static/config/mizuwallet-connect-manifest.json",
-        },
-      }}
+      dappConfig={{ network: NETWORK }}
+      optInWallets={[
+        "Continue with Google",
+        "Petra",
+        "Nightly",
+        "Pontem Wallet",
+        "Mizu Wallet",
+      ]}
       onError={(error) => {
         toast({
           variant: "destructive",
