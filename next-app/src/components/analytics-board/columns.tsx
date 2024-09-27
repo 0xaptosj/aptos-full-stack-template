@@ -4,10 +4,10 @@ import { ColumnDef } from "@tanstack/react-table";
 import { truncateAddress } from "@aptos-labs/wallet-adapter-react";
 
 import { DataTableColumnHeader } from "@/components/ui/data-table-column-header";
-import { Message } from "@/lib/type/message";
 import { NETWORK } from "@/lib/aptos";
+import { UserStat } from "@/lib/type/user_stats";
 
-export const columns: ColumnDef<Message>[] = [
+export const columns: ColumnDef<UserStat>[] = [
   {
     accessorKey: "user_addr",
     header: ({ column }) => (
