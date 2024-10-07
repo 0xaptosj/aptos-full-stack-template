@@ -34,14 +34,14 @@ impl NamedStep for EventsExtractor {
 
 #[async_trait]
 impl Processable for EventsExtractor {
-    type Input = Transaction;
-    type Output = ContractEvent;
+    type Input = Vec<Transaction>;
+    type Output = Vec<ContractEvent>;
     type RunType = AsyncRunType;
 
     async fn process(
         &mut self,
-        item: TransactionContext<Transaction>,
-    ) -> Result<Option<TransactionContext<ContractEvent>>, ProcessorError> {
+        item: TransactionContext<Vec<Transaction>>,
+    ) -> Result<Option<TransactionContext<Vec<ContractEvent>>>, ProcessorError> {
         let events = item
             .data
             .par_iter()
