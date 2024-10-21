@@ -139,7 +139,7 @@ gcloud auth login
 
 Create a repo in the container registry and push to it. You can learn more about publishing to Artifact Registry on their [docs](https://cloud.google.com/artifact-registry/docs/docker/pushing-and-pulling#pushing).
 
-Authorize docker to push to Artifact Registry. Please update the region to your region.
+Authorize docker to push to Artifact Registry. Please update the region to your region. You only need to run this once.
 
 ```sh
 # update us-west2 to your region, you can find it in google cloud
