@@ -86,6 +86,31 @@ You should see the indexer start to index Aptos blockchain events!
 "timestamp":"2024-08-15T01:06:35.257801Z","level":"INFO","message":"Finished processing events from versions [0, 4999]","filename":"src/processors/events/events_processor.rs","line_number":90,"threadName":"tokio-runtime-worker","threadId":"ThreadId(17)"
 ```
 
+## Re-indexing
+
+**WARNING**: Do not ever try to backfill the data, logic like point calculation is incremental, if you backfill like processing same event twice, you will get wrong point data. So please always revert all migrations and re-index from the first tx your contract deployed.
+
+### Steps
+
+Revert all migrations, this should stop the indexer by making it panic if indexer is running on the cloud.
+
+```sh
+diesel migration revert \
+    --all \
+    --config-file="src/db_migrations/diesel.toml" \
+    --database-url="postgresql://username:password@localhost:5432/example-indexer"
+```
+
+Run all migrations again.
+
+```sh
+diesel migration run \
+    --config-file="src/db_migrations/diesel.toml" \
+    --database-url="postgresql://username:password@localhost:5432/example-indexer"
+```
+
+Follow the guide below to re-build the indexer docker image and redeploy it to cloud run or run it locally.
+
 ## Get ready for cloud deployment
 
 We recommend using Google Cloud Run to host the indexer, Secret Manager to store `config.yaml` and Artifact Registry to store the indexer docker image.
@@ -148,7 +173,3 @@ Go to cloud run dashboard, create a new service, and select the container image 
 You can learn more about cloud run on their [docs](https://cloud.google.com/run/docs/quickstarts/deploy-container).
 
 **NOTE**: Always allocate CPU so it always runs instead of only run when there is traffic. Min and max instances should be 1.
-
-## Re-indexing
-
-**WARNING**: Do not ever try to backfill the data, logic like point calculation is incremental, if you backfill like processing same event twice, you will get wrong point data. So please always revert all migrations and re-index from the first tx your contract deployed.
