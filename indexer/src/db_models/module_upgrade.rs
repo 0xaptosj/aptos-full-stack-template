@@ -12,7 +12,7 @@ pub struct ModuleUpgrade {
     pub module_name: String,
     pub upgrade_number: i64,
     pub module_bytecode: Vec<u8>,
-    pub module_source_code: Vec<u8>,
+    pub module_source_code: String,
     pub module_abi: serde_json::Value,
     pub tx_version: i64,
 }

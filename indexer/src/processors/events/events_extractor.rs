@@ -11,7 +11,6 @@ use aptos_indexer_processor_sdk::{
 };
 use async_trait::async_trait;
 use rayon::prelude::*;
-use serde_json::json;
 
 use crate::db_models::{
     message::{CreateMessageEventOnChain, Message, UpdateMessageEventOnChain},
@@ -261,12 +260,12 @@ impl ContractUpgradeChange {
                         ModuleUpgrade {
                             module_addr: contract_address.to_string(),
                             module_name: module.name.clone(),
-                            upgrade_number: package.upgrade_number,
+                            upgrade_number: package.upgrade_number.parse().unwrap(),
                             module_bytecode: raw_module.bytecode.clone(),
                             module_source_code: module.source.clone(),
-                            module_abi: json!(raw_module.abi.clone().unwrap_or_else(|| {
-                                panic!("Module abi is missing for module {}", module.name)
-                            })),
+                            module_abi: serde_json::json!(raw_module.abi.clone().unwrap_or_else(
+                                || { panic!("Module abi is missing for module {}", module.name) }
+                            )),
                             tx_version: txn_version,
                         }
                     })

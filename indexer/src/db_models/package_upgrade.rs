@@ -12,8 +12,8 @@ pub struct PackageUpgrade {
     pub package_name: String,
     pub upgrade_number: i64,
     pub upgrade_policy: i64,
-    pub package_manifest: Vec<u8>,
-    pub source_digest: Vec<u8>,
+    pub package_manifest: String,
+    pub source_digest: String,
     pub tx_version: i64,
 }
 
@@ -21,21 +21,21 @@ pub struct PackageUpgrade {
 pub struct ModuleOnChain {
     pub name: String,
     // module source code, 0x if deployer chose to hide it
-    pub source: Vec<u8>,
+    pub source: String,
 }
 
 #[derive(Clone, Debug, Deserialize, Serialize)]
 pub struct UpgradePolicyOnChain {
-    pub policy: String,
+    pub policy: i64,
 }
 
 #[derive(Clone, Debug, Deserialize, Serialize)]
 pub struct PackageOnChain {
-    pub manifest: Vec<u8>,
+    pub manifest: String,
     pub modules: Vec<ModuleOnChain>,
     pub name: String,
-    pub source_digest: Vec<u8>,
-    pub upgrade_number: i64,
+    pub source_digest: String,
+    pub upgrade_number: String,
     pub upgrade_policy: UpgradePolicyOnChain,
 }
 
@@ -56,8 +56,8 @@ impl PackageUpgradeChangeOnChain {
             .map(|package| PackageUpgrade {
                 package_addr: package_addr.clone(),
                 package_name: package.name.clone(),
-                upgrade_number: package.upgrade_number,
-                upgrade_policy: package.upgrade_policy.policy.parse().unwrap(),
+                upgrade_number: package.upgrade_number.parse().unwrap(),
+                upgrade_policy: package.upgrade_policy.policy,
                 package_manifest: package.manifest.clone(),
                 source_digest: package.source_digest.clone(),
                 tx_version,

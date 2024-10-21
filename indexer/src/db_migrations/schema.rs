@@ -27,7 +27,7 @@ diesel::table! {
         module_name -> Varchar,
         upgrade_number -> Int8,
         module_bytecode -> Bytea,
-        module_source_code -> Bytea,
+        module_source_code -> Text,
         module_abi -> Json,
         tx_version -> Int8,
     }
@@ -41,8 +41,8 @@ diesel::table! {
         package_name -> Varchar,
         upgrade_number -> Int8,
         upgrade_policy -> Int8,
-        package_manifest -> Bytea,
-        source_digest -> Bytea,
+        package_manifest -> Text,
+        source_digest -> Text,
         tx_version -> Int8,
     }
 }
