@@ -18,30 +18,30 @@ use crate::db_models::{
     package_upgrade::{PackageUpgrade, PackageUpgradeChangeOnChain},
 };
 
-/// EventsExtractor is a step that extracts events and their metadata from transactions.
-pub struct EventsExtractor
+/// Extractor is a step that extracts events and their metadata from transactions.
+pub struct Extractor
 where
     Self: Sized + Send + 'static,
 {
     contract_address: String,
 }
 
-impl EventsExtractor {
+impl Extractor {
     pub fn new(contract_address: String) -> Self {
         Self { contract_address }
     }
 }
 
-impl AsyncStep for EventsExtractor {}
+impl AsyncStep for Extractor {}
 
-impl NamedStep for EventsExtractor {
+impl NamedStep for Extractor {
     fn name(&self) -> String {
-        "EventsExtractor".to_string()
+        "Extractor".to_string()
     }
 }
 
 #[async_trait]
-impl Processable for EventsExtractor {
+impl Processable for Extractor {
     type Input = Vec<Transaction>;
     type Output = TransactionContextData;
     type RunType = AsyncRunType;

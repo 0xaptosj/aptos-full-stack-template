@@ -8,7 +8,7 @@ use aptos_indexer_processor_sdk::{
 use async_trait::async_trait;
 
 use super::{
-    events_extractor::{ContractEvent, ContractUpgradeChange, TransactionContextData},
+    extractor::{ContractEvent, ContractUpgradeChange, TransactionContextData},
     storers::{
         create_message_event_storer::process_create_message_events,
         update_message_event_storer::process_update_message_events,
@@ -18,30 +18,30 @@ use super::{
 };
 use crate::utils::database_utils::ArcDbPool;
 
-/// EventsStorer is a step that inserts events in the database.
-pub struct EventsStorer
+/// Storer is a step that inserts events in the database.
+pub struct Storer
 where
     Self: Sized + Send + 'static,
 {
     pool: ArcDbPool,
 }
 
-impl AsyncStep for EventsStorer {}
+impl AsyncStep for Storer {}
 
-impl NamedStep for EventsStorer {
+impl NamedStep for Storer {
     fn name(&self) -> String {
-        "EventsStorer".to_string()
+        "Storer".to_string()
     }
 }
 
-impl EventsStorer {
+impl Storer {
     pub fn new(pool: ArcDbPool) -> Self {
         Self { pool }
     }
 }
 
 #[async_trait]
-impl Processable for EventsStorer {
+impl Processable for Storer {
     type Input = TransactionContextData;
     type Output = TransactionContextData;
     type RunType = AsyncRunType;
