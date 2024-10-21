@@ -8,7 +8,7 @@ use aptos_indexer_processor_sdk::{
 use async_trait::async_trait;
 
 use super::{
-    events_extractor::ContractEvent,
+    events_extractor::{ContractEvent, TransactionContextData},
     storers::{
         create_message_event_storer::process_create_message_events,
         update_message_event_storer::process_update_message_events,
@@ -40,16 +40,17 @@ impl EventsStorer {
 
 #[async_trait]
 impl Processable for EventsStorer {
-    type Input = Vec<ContractEvent>;
-    type Output = Vec<ContractEvent>;
+    type Input = TransactionContextData;
+    type Output = TransactionContextData;
     type RunType = AsyncRunType;
 
     async fn process(
         &mut self,
-        events: TransactionContext<Vec<ContractEvent>>,
-    ) -> Result<Option<TransactionContext<Vec<ContractEvent>>>, ProcessorError> {
+        transaction_context_data: TransactionContext<TransactionContextData>,
+    ) -> Result<Option<TransactionContext<TransactionContextData>>, ProcessorError> {
         let per_table_chunk_sizes: AHashMap<String, usize> = AHashMap::new();
-        let (create_events, update_events) = events.clone().data.into_iter().fold(
+        let data = transaction_context_data.data.clone();
+        let (create_events, update_events) = data.events.into_iter().fold(
             (vec![], vec![]),
             |(mut create_events, mut update_events), event| {
                 match event {
@@ -78,6 +79,6 @@ impl Processable for EventsStorer {
         )
         .await?;
 
-        Ok(Some(events))
+        Ok(Some(transaction_context_data))
     }
 }

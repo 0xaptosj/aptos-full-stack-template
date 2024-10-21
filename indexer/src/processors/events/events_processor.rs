@@ -79,7 +79,7 @@ impl EventsProcessor {
         loop {
             match buffer_receiver.recv().await {
                 Ok(txn_context) => {
-                    if txn_context.data.is_empty() {
+                    if txn_context.data.events.len() == 0 && txn_context.data.changes.len() == 0 {
                         continue;
                     }
                     tracing::info!(
