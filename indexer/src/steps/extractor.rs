@@ -7,7 +7,7 @@ use aptos_indexer_processor_sdk::{
     },
     traits::{async_step::AsyncRunType, AsyncStep, NamedStep, Processable},
     types::transaction_context::TransactionContext,
-    utils::errors::ProcessorError,
+    utils::{convert::standardize_address, errors::ProcessorError},
 };
 use async_trait::async_trait;
 use rayon::prelude::*;
@@ -126,7 +126,9 @@ pub enum ContractEvent {
 
 impl ContractEvent {
     fn from_event(contract_address: &str, event_idx: usize, event: &EventPB) -> Option<Self> {
-        let t: &str = event.type_str.as_ref();
+        // use standardize_address to pad the address in event type before processing
+        let parts = event.type_str.split("::").collect::<Vec<_>>();
+        let t = standardize_address(parts[0]) + "::" + parts[1] + "::" + parts[2];
         let should_include = t.starts_with(contract_address);
 
         if should_include {
@@ -196,10 +198,12 @@ impl ContractUpgradeChange {
             .for_each(|change| match change.change.as_ref() {
                 Some(change) => match change {
                     Change::WriteModule(write_module_change) => {
-                        if write_module_change.address == contract_address {
+                        if standardize_address(write_module_change.address.as_str())
+                            == contract_address
+                        {
                             raw_module_changes.insert(
                                 (
-                                    write_module_change.address.clone(),
+                                    standardize_address(write_module_change.address.as_str()),
                                     write_module_change
                                         .data
                                         .clone()
@@ -218,7 +222,8 @@ impl ContractUpgradeChange {
                         }
                     }
                     Change::WriteResource(write_resource_change) => {
-                        if write_resource_change.address == contract_address
+                        if standardize_address(write_resource_change.address.as_str())
+                            == contract_address
                             && write_resource_change.type_str == "0x1::code::PackageRegistry"
                         {
                             let package_upgrade: PackageUpgradeChangeOnChain =
