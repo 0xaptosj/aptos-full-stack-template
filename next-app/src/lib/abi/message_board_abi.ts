@@ -1,5 +1,5 @@
 export const ABI = {
-  address: "0xb9ea6371d84ae2db92f83d980646022af0a70fabccd4370e02d4dbed73b35d13",
+  address: "0x754892aa4e225a248cf698ee45d7e822ec37c64d546324916121cff742b0fe7c",
   name: "message_board",
   friends: [],
   exposed_functions: [
@@ -13,22 +13,13 @@ export const ABI = {
       return: [],
     },
     {
-      name: "create_message_option",
-      visibility: "public",
-      is_entry: true,
-      is_view: false,
-      generic_type_params: [],
-      params: ["&signer", "0x1::option::Option<0x1::string::String>"],
-      return: [],
-    },
-    {
       name: "get_message_content",
       visibility: "public",
       is_entry: false,
       is_view: true,
       generic_type_params: [],
       params: [
-        "0x1::object::Object<0xb9ea6371d84ae2db92f83d980646022af0a70fabccd4370e02d4dbed73b35d13::message_board::Message>",
+        "0x1::object::Object<0x754892aa4e225a248cf698ee45d7e822ec37c64d546324916121cff742b0fe7c::message_board::Message>",
       ],
       return: ["0x1::string::String", "address", "u64", "u64"],
     },
@@ -40,7 +31,7 @@ export const ABI = {
       generic_type_params: [],
       params: [
         "&signer",
-        "0x1::object::Object<0xb9ea6371d84ae2db92f83d980646022af0a70fabccd4370e02d4dbed73b35d13::message_board::Message>",
+        "0x1::object::Object<0x754892aa4e225a248cf698ee45d7e822ec37c64d546324916121cff742b0fe7c::message_board::Message>",
         "0x1::string::String",
       ],
       return: [],
@@ -57,7 +48,7 @@ export const ABI = {
         { name: "message_obj_addr", type: "address" },
         {
           name: "message",
-          type: "0xb9ea6371d84ae2db92f83d980646022af0a70fabccd4370e02d4dbed73b35d13::message_board::Message",
+          type: "0x754892aa4e225a248cf698ee45d7e822ec37c64d546324916121cff742b0fe7c::message_board::Message",
         },
       ],
     },
@@ -84,7 +75,7 @@ export const ABI = {
         { name: "message_obj_addr", type: "address" },
         {
           name: "message",
-          type: "0xb9ea6371d84ae2db92f83d980646022af0a70fabccd4370e02d4dbed73b35d13::message_board::Message",
+          type: "0x754892aa4e225a248cf698ee45d7e822ec37c64d546324916121cff742b0fe7c::message_board::Message",
         },
       ],
     },

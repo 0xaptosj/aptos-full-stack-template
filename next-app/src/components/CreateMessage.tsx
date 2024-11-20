@@ -1,14 +1,23 @@
 "use client";
 
 import { useWalletClient } from "@thalalabs/surf/hooks";
-import { useWallet } from "@aptos-labs/wallet-adapter-react";
+import {
+  PendingTransactionResponse,
+  useWallet,
+} from "@aptos-labs/wallet-adapter-react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 
 import { getAptosClient } from "@/lib/aptos";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { useToast } from "@/components/ui/use-toast";
 import {
   Form,
@@ -23,6 +32,7 @@ import { Input } from "@/components/ui/input";
 import { TransactionOnExplorer } from "@/components/ExplorerLink";
 import { ABI } from "@/lib/abi/message_board_abi";
 import { useQueryClient } from "@tanstack/react-query";
+import { sponsorTxOnServer } from "@/app/actions";
 
 const FormSchema = z.object({
   stringContent: z.string(),
@@ -30,7 +40,7 @@ const FormSchema = z.object({
 
 export function CreateMessage() {
   const { toast } = useToast();
-  const { connected, account } = useWallet();
+  const { connected, account, signTransaction } = useWallet();
   const { client: walletClient } = useWalletClient();
   const queryClient = useQueryClient();
 
@@ -49,20 +59,35 @@ export function CreateMessage() {
       return;
     }
 
-    walletClient
-      .useABI(ABI)
-      .create_message({
-        type_arguments: [],
-        arguments: [data.stringContent],
-      })
-      .then((committedTransaction) => {
+    const transaction = await getAptosClient().transaction.build.simple({
+      sender: account.address,
+      withFeePayer: true,
+      data: {
+        function: `${ABI.address}::${ABI.name}::create_message`,
+        functionArguments: [data.stringContent],
+      },
+    });
+
+    const senderAuthenticator = await signTransaction(transaction);
+
+    //   await walletClient
+    //     .useABI(ABI)
+    //     .create_message({
+    //       type_arguments: [],
+    //       arguments: [data.stringContent],
+    //     })
+    await sponsorTxOnServer({
+      transactionBytes: Array.from(transaction.bcsToBytes()),
+      senderAuthenticatorBytes: Array.from(senderAuthenticator.bcsToBytes()),
+    })
+      .then((tx: PendingTransactionResponse) => {
         return getAptosClient().waitForTransaction({
-          transactionHash: committedTransaction.hash,
+          transactionHash: tx.hash,
         });
       })
       .then((executedTransaction) => {
         toast({
-          title: "Success",
+          title: "Success, tx is sponsored haha",
           description: (
             <TransactionOnExplorer hash={executedTransaction.hash} />
           ),
@@ -85,6 +110,10 @@ export function CreateMessage() {
     <Card>
       <CardHeader>
         <CardTitle>Create a new message</CardTitle>
+        <CardDescription>
+          This is a gasless tx so you can call it without having APT in your
+          wallet
+        </CardDescription>
       </CardHeader>
       <CardContent className="flex flex-wrap">
         <Form {...form}>

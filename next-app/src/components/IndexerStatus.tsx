@@ -46,7 +46,7 @@ export const IndexerStatus = () => {
   }
 
   const versionDiff = data.onChainLastVersion - data.indexerLastVersion;
-  const isHealthy = versionDiff < 100;
+  const isHealthy = versionDiff < 300;
 
   return (
     <TooltipProvider>
