@@ -66,6 +66,9 @@ export function CreateMessage() {
         function: `${ABI.address}::${ABI.name}::create_message`,
         functionArguments: [data.stringContent],
       },
+      options: {
+        maxGasAmount: 10_000,
+      },
     });
 
     const senderAuthenticator = await signTransaction(transaction);
