@@ -30,6 +30,8 @@ diesel::table! {
         module_source_code -> Text,
         module_abi -> Json,
         tx_version -> Int8,
+        #[max_length = 300]
+        package_name -> Varchar,
     }
 }
 

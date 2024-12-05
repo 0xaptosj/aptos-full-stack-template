@@ -15,4 +15,5 @@ pub struct ModuleUpgrade {
     pub module_source_code: String,
     pub module_abi: serde_json::Value,
     pub tx_version: i64,
+    pub package_name: String,
 }

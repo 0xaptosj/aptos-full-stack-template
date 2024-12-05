@@ -272,6 +272,7 @@ impl ContractUpgradeChange {
                                 || { panic!("Module abi is missing for module {}", module.name) }
                             )),
                             tx_version: txn_version,
+                            package_name: package.name.clone(),
                         }
                     })
                     .collect::<Vec<ModuleUpgrade>>()
