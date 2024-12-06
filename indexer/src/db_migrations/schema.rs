@@ -20,18 +20,18 @@ diesel::table! {
 }
 
 diesel::table! {
-    module_upgrade_history (module_addr, module_name, upgrade_number) {
+    module_upgrade_history (module_addr, module_name, package_name, upgrade_number) {
         #[max_length = 300]
         module_addr -> Varchar,
         #[max_length = 300]
         module_name -> Varchar,
+        #[max_length = 300]
+        package_name -> Varchar,
         upgrade_number -> Int8,
         module_bytecode -> Bytea,
         module_source_code -> Text,
         module_abi -> Json,
         tx_version -> Int8,
-        #[max_length = 300]
-        package_name -> Varchar,
     }
 }
 

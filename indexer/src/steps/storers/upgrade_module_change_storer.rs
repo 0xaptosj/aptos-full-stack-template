@@ -24,6 +24,7 @@ async fn execute_upgrade_module_changes_sql(
                 .on_conflict((
                     module_upgrade_history::module_addr,
                     module_upgrade_history::module_name,
+                    module_upgrade_history::package_name,
                     module_upgrade_history::upgrade_number,
                 ))
                 .do_nothing();
