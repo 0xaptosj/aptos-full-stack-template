@@ -32,9 +32,6 @@ async fn execute_update_message_events_sql(
                 .on_conflict(messages::message_obj_addr)
                 .do_update()
                 .set((
-                    messages::message_obj_addr.eq(messages::message_obj_addr),
-                    messages::creator_addr.eq(messages::creator_addr),
-                    messages::creation_timestamp.eq(messages::creation_timestamp),
                     messages::last_update_timestamp.eq(excluded(messages::last_update_timestamp)),
                     messages::last_update_event_idx.eq(excluded(messages::last_update_event_idx)),
                     messages::content.eq(excluded(messages::content)),
@@ -82,11 +79,8 @@ async fn execute_update_message_events_sql(
                 .on_conflict(user_stats::user_addr)
                 .do_update()
                 .set((
-                    user_stats::user_addr.eq(user_stats::user_addr),
-                    user_stats::creation_timestamp.eq(user_stats::creation_timestamp),
                     user_stats::last_update_timestamp
                         .eq(excluded(user_stats::last_update_timestamp)),
-                    user_stats::created_messages.eq(user_stats::created_messages),
                     user_stats::updated_messages
                         .eq(user_stats::updated_messages + excluded(user_stats::updated_messages)),
                     user_stats::s1_points

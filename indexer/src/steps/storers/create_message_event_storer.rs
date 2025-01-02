@@ -61,13 +61,10 @@ async fn execute_create_message_events_sql(
                 .on_conflict(user_stats::user_addr)
                 .do_update()
                 .set((
-                    user_stats::user_addr.eq(user_stats::user_addr),
-                    user_stats::creation_timestamp.eq(user_stats::creation_timestamp),
                     user_stats::last_update_timestamp
                         .eq(excluded(user_stats::last_update_timestamp)),
                     user_stats::created_messages
                         .eq(user_stats::created_messages + excluded(user_stats::created_messages)),
-                    user_stats::updated_messages.eq(user_stats::updated_messages),
                     user_stats::s1_points
                         .eq(user_stats::s1_points + excluded(user_stats::s1_points)),
                     user_stats::total_points
