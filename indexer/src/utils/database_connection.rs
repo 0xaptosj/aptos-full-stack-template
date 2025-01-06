@@ -29,6 +29,7 @@ fn establish_connection(database_url: &str) -> BoxFuture<ConnectionResult<AsyncP
             }
             None => {
                 let connector = TlsConnector::builder()
+                    .danger_accept_invalid_certs(true)
                     .build()
                     .expect("Could not build default TLS connector");
                 MakeTlsConnector::new(connector)
