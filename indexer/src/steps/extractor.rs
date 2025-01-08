@@ -134,10 +134,10 @@ impl ContractEvent {
     fn from_event(contract_address: &str, event_idx: usize, event: &EventPB) -> Option<Self> {
         // use standardize_address to pad the address in event type before processing
         let parts = event.type_str.split("::").collect::<Vec<_>>();
-        let t = standardize_address(parts[0]) + "::" + parts[1] + "::" + parts[2];
-        let should_include = t.starts_with(contract_address);
+        let event_addr = standardize_address(parts[0]);
 
-        if should_include {
+        if contract_address == event_addr {
+            let t = event_addr + "::" + parts[1] + "::" + parts[2];
             if t.starts_with(
                 format!("{}::message_board::CreateMessageEvent", contract_address).as_str(),
             ) {
