@@ -39,6 +39,8 @@ WORKDIR /usr/src/app
 COPY --from=builder /usr/src/app/target/x86_64-unknown-linux-gnu/release/indexer .
 
 # Copy the configuration file
+# Please skip the copying when publish to public image registry
+# When running on google cloud, you will upload config to secret manager, see readme, so you don't need to copy here.
 COPY config.yaml /secrets/config
 
 # Expose the port your application is using
