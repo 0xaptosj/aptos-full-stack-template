@@ -108,7 +108,7 @@ export function Message({ messageObjAddr }: MessageProps) {
           </div>
         </CardContent>
       </Card>
-      {data.message.creator_addr == account?.address && (
+      {data.message.creator_addr == account?.address.toStringLong() && (
         <UpdateMessage
           messageObjAddr={data.message.message_obj_addr as `0x${string}`}
         />
