@@ -2,7 +2,8 @@
 
 import {
   APTOS_CONNECT_ACCOUNT_URL,
-  AnyAptosWallet,
+  AdapterWallet,
+  AdapterNotDetectedWallet,
   AptosPrivacyPolicy,
   WalletItem,
   getAptosConnectWallets,
@@ -46,7 +47,7 @@ export function WalletSelector() {
   const copyAddress = useCallback(async () => {
     if (!account?.address) return;
     try {
-      await navigator.clipboard.writeText(account.address);
+      await navigator.clipboard.writeText(account.address.toStringLong());
       toast({
         title: "Success",
         description: "Copied wallet address to clipboard.",
@@ -64,7 +65,9 @@ export function WalletSelector() {
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
         <Button>
-          {account?.ansName || truncateAddress(account?.address) || "Unknown"}
+          {account?.ansName ||
+            truncateAddress(account?.address.toStringLong()) ||
+            "Unknown"}
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end">
@@ -177,7 +180,7 @@ function ConnectWalletDialog({ close }: ConnectWalletDialogProps) {
 }
 
 interface WalletRowProps {
-  wallet: AnyAptosWallet;
+  wallet: AdapterWallet | AdapterNotDetectedWallet;
   onConnect?: () => void;
 }
 

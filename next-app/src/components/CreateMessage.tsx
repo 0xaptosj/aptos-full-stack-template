@@ -71,7 +71,9 @@ export function CreateMessage() {
       },
     });
 
-    const senderAuthenticator = await signTransaction(transaction);
+    const senderAuthenticator = await signTransaction({
+      transactionOrPayload: transaction,
+    });
 
     //   await walletClient
     //     .useABI(ABI)
@@ -81,7 +83,7 @@ export function CreateMessage() {
     //     })
     await sponsorTxOnServer({
       transactionBytes: Array.from(transaction.bcsToBytes()),
-      senderAuthenticatorBytes: Array.from(senderAuthenticator.bcsToBytes()),
+      senderAuthenticatorBytes: Array.from(senderAuthenticator.authenticator.bcsToBytes()),
     })
       .then((tx: PendingTransactionResponse) => {
         return getAptosClient().waitForTransaction({
