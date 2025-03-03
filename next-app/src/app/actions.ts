@@ -12,6 +12,8 @@ import {
   AccountAuthenticator,
   Deserializer,
   Ed25519PrivateKey,
+  PrivateKey,
+  PrivateKeyVariants,
   SimpleTransaction,
 } from "@aptos-labs/ts-sdk";
 
@@ -67,7 +69,7 @@ export const sponsorTxOnServer = async ({
   );
 
   const sponsor = Account.fromPrivateKey({
-    privateKey: new Ed25519PrivateKey(process.env.TX_SPONSOR_PRIVATE_KEY!),
+    privateKey: new Ed25519PrivateKey(PrivateKey.formatPrivateKey(process.env.TX_SPONSOR_PRIVATE_KEY!, PrivateKeyVariants.Ed25519)),
   });
 
   const feePayerAuthenticator = getAptosClient().transaction.signAsFeePayer({
