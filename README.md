@@ -11,6 +11,9 @@ Please read each directory's README carefully to understand how to use the templ
 
 ## Using [GitHub Codespace](https://github.com/features/codespaces)
 
+- [Video tutorial in English](https://www.youtube.com/watch?v=RJnlSwyNI8Q)
+- [中文视频教程](https://www.youtube.com/watch?v=kAM0zH6N6pc)
+
 If you are on a Windows machine or have trouble pulling a docker image or connecting to RPC, you can use GitHub codespace as a remote development server, this repo is pre-configured for codespace with all the dependencies (Rust, docker, google cloud cli) ready. If you use codespace, you can install aptos-cli via 
 
 ```sh
