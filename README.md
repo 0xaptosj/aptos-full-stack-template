@@ -1,5 +1,8 @@
 # A template to build a full stack app on Aptos
 
+- [Video tutorial in English](https://www.youtube.com/watch?v=-UkbHdeSImc)
+- [中文视频教程](https://www.youtube.com/watch?v=uAfK1Lpr33M)
+
 This template is an opinionated alternative template to [CAD (create-aptos-dapp)](https://aptos.dev/en/build/create-aptos-dapp).
 
 Please read each directory's README carefully to understand how to use the template.
