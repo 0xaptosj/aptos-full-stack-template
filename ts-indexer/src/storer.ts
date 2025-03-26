@@ -1,6 +1,9 @@
 import Database from "better-sqlite3";
 import type { Database as DatabaseType } from "better-sqlite3";
 import { streamTransactions } from "./streamTx";
+import "dotenv/config";
+
+const DEPLOYED_TX_VERSION = 1948140715n;
 
 async function* streamAndPersistTransactions({
   db,
@@ -14,7 +17,7 @@ async function* streamAndPersistTransactions({
     .prepare(`SELECT v FROM kv WHERE k = 'startingVersion'`)
     .get() as { v: string | number | bigint } | undefined;
 
-  const startingVersion = startingVersionRow?.v ?? 1948140715n;
+  const startingVersion = startingVersionRow?.v ?? DEPLOYED_TX_VERSION;
 
   for await (const event of streamTransactions({
     ...opts,
