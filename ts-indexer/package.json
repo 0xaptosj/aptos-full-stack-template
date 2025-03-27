@@ -9,7 +9,7 @@
     "typescript": "^5.7.3"
   },
   "dependencies": {
-    "@aptos-labs/aptos-protos": "^1.1.4",
+    "@aptos-labs/aptos-protos": "1.1.4",
     "@grpc/grpc-js": "^1.12.6",
     "better-sqlite3": "^11.9.1",
     "dotenv": "^16.3.1"
