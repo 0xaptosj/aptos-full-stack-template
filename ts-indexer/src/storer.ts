@@ -20,12 +20,16 @@ CREATE TABLE IF NOT EXISTS processor_status(
 `);
 
   const lastSuccessVersion = db
-    .prepare(`
+    .prepare(
+      `
 SELECT last_success_version FROM processor_status WHERE processor = 'my_processor'
-      `)
+      `
+    )
     .get() as { last_success_version: number } | undefined;
 
-  const startingVersion = lastSuccessVersion ? lastSuccessVersion.last_success_version + 1 : process.env.STARTING_VERSION!;
+  const startingVersion = lastSuccessVersion
+    ? lastSuccessVersion.last_success_version + 1
+    : process.env.STARTING_VERSION!;
 
   for await (const event of streamTransactions({
     ...opts,
@@ -45,8 +49,13 @@ DO UPDATE SET
     last_success_version = excluded.last_success_version,
     last_transaction_timestamp = excluded.last_transaction_timestamp,
     last_updated = excluded.last_updated
-        `)
-        .run('my_processor', lastSuccessTx.version, lastSuccessTx.timestamp?.seconds, Math.floor(Date.now() / 1000));
+        `
+      ).run(
+        "my_processor",
+        lastSuccessTx.version,
+        lastSuccessTx.timestamp?.seconds,
+        Math.floor(Date.now() / 1000)
+      );
     }
   }
 }

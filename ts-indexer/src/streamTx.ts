@@ -39,10 +39,10 @@ export async function* streamTransactions(opts: {
 
   const output = new ReadableStream<
     | {
-      type: "data";
-      chainId: bigint;
-      transactions: aptos.transaction.v1.Transaction[];
-    }
+        type: "data";
+        chainId: bigint;
+        transactions: aptos.transaction.v1.Transaction[];
+      }
     | { type: "error"; error: Error }
     | { type: "metadata"; metadata: Metadata }
     | { type: "status"; status: StatusObject }
