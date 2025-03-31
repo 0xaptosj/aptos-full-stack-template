@@ -2,13 +2,10 @@ import { aptos } from "@aptos-labs/aptos-protos";
 import { ChannelCredentials, Metadata, type StatusObject } from "@grpc/grpc-js";
 
 export async function* streamTransactions(opts: {
-  url:
-    | `grpc.${"mainnet" | "testnet" | "devnet"}.aptoslabs.com:443`
-    | (string & {});
+  url: string;
   apiKey: string;
   startingVersion: bigint;
 }) {
-  console.log("grpc url", opts.url);
   const client = new aptos.indexer.v1.RawDataClient(
     opts.url,
     ChannelCredentials.createSsl(),
@@ -42,10 +39,10 @@ export async function* streamTransactions(opts: {
 
   const output = new ReadableStream<
     | {
-        type: "data";
-        chainId: bigint;
-        transactions: aptos.transaction.v1.Transaction[];
-      }
+      type: "data";
+      chainId: bigint;
+      transactions: aptos.transaction.v1.Transaction[];
+    }
     | { type: "error"; error: Error }
     | { type: "metadata"; metadata: Metadata }
     | { type: "status"; status: StatusObject }
@@ -83,7 +80,6 @@ export async function* streamTransactions(opts: {
     },
   });
 
-  // @ts-ignore - https://github.com/oven-sh/bun/issues/14660
   for await (const chunk of output) {
     yield chunk;
   }

@@ -3,21 +3,29 @@ import type { Database as DatabaseType } from "better-sqlite3";
 import { streamTransactions } from "./streamTx";
 import "dotenv/config";
 
-const DEPLOYED_TX_VERSION = 1948140715n;
-
 async function* streamAndPersistTransactions({
   db,
   ...opts
 }: Omit<Parameters<typeof streamTransactions>[number], "startingVersion"> & {
   db: DatabaseType;
 }) {
-  db.exec(`CREATE TABLE IF NOT EXISTS kv(k PRIMARY KEY, v)`);
+  db.exec(`
+CREATE TABLE IF NOT EXISTS processor_status(
+    processor TEXT NOT NULL,
+    last_success_version INTEGER NOT NULL,
+    last_transaction_timestamp TIMESTAMP NOT NULL,
+    last_updated TIMESTAMP NOT NULL,
+    PRIMARY KEY (processor)
+)
+`);
 
-  const startingVersionRow = db
-    .prepare(`SELECT v FROM kv WHERE k = 'startingVersion'`)
-    .get() as { v: string | number | bigint } | undefined;
+  const lastSuccessVersion = db
+    .prepare(`
+SELECT last_success_version FROM processor_status WHERE processor = 'my_processor'
+      `)
+    .get() as { last_success_version: number } | undefined;
 
-  const startingVersion = startingVersionRow?.v ?? DEPLOYED_TX_VERSION;
+  const startingVersion = lastSuccessVersion ? lastSuccessVersion.last_success_version + 1 : process.env.STARTING_VERSION!;
 
   for await (const event of streamTransactions({
     ...opts,
@@ -26,12 +34,19 @@ async function* streamAndPersistTransactions({
     yield event;
 
     if (event.type === "data") {
-      const nextStartingVersion =
-        event.transactions[event.transactions.length - 1].version! + 1n;
+      const lastSuccessTx = event.transactions[event.transactions.length - 1];
 
       db.prepare(
-        `INSERT INTO kv(k, v) VALUES('startingVersion', ?) ON CONFLICT(k) DO UPDATE SET v = excluded.v`
-      ).run(nextStartingVersion);
+        `
+INSERT INTO processor_status(processor, last_success_version, last_transaction_timestamp, last_updated)
+VALUES(?, ?, ?, ?)
+ON CONFLICT(processor)
+DO UPDATE SET
+    last_success_version = excluded.last_success_version,
+    last_transaction_timestamp = excluded.last_transaction_timestamp,
+    last_updated = excluded.last_updated
+        `)
+        .run('my_processor', lastSuccessTx.version, lastSuccessTx.timestamp?.seconds, Math.floor(Date.now() / 1000));
     }
   }
 }
@@ -48,12 +63,6 @@ const run = async () => {
   })) {
     switch (event.type) {
       case "data": {
-        if (event.chainId !== 1n) {
-          throw new Error(
-            `Transaction stream returned a chainId of ${event.chainId}, but expected mainnet chainId=1`
-          );
-        }
-
         const startVersion = event.transactions[0].version!;
         const endVersion =
           event.transactions[event.transactions.length - 1].version!;
