@@ -18,4 +18,4 @@ SENDER_PROFILE=testnet-profile-1
 aptos move run-script \
 	--assume-yes \
   --profile $SENDER_PROFILE \
-  --compiled-script-path build/message-board/bytecode_scripts/update_message.mv
+  --compiled-script-path build/message-board/bytecode_scripts/update_message_1.mv

@@ -1,7 +1,8 @@
+import "dotenv/config";
 import Database from "better-sqlite3";
 import type { Database as DatabaseType } from "better-sqlite3";
 import { streamTransactions } from "./streamTx";
-import "dotenv/config";
+import { extractAndSaveEvents } from "./extractor";
 
 async function* streamAndPersistTransactions({
   db,
@@ -19,6 +20,20 @@ CREATE TABLE IF NOT EXISTS processor_status(
 )
 `);
 
+  db.exec(`
+CREATE TABLE IF NOT EXISTS messages(
+    message_obj_addr TEXT NOT NULL,
+    creator_addr TEXT NOT NULL,
+    creation_timestamp INTEGER NOT NULL,
+    last_update_timestamp INTEGER NOT NULL,
+    -- we store the event index so when we update in batch,
+    -- we ignore when the event index is less than the last update event index
+    last_update_event_idx INTEGER NOT NULL,
+    content TEXT NOT NULL,
+    PRIMARY KEY (message_obj_addr)
+)
+`);
+
   const lastSuccessVersion = db
     .prepare(
       `
@@ -31,14 +46,19 @@ SELECT last_success_version FROM processor_status WHERE processor = 'my_processo
     ? lastSuccessVersion.last_success_version + 1
     : process.env.STARTING_VERSION!;
 
-  for await (const event of streamTransactions({
+  for await (const streamOutput of streamTransactions({
     ...opts,
     startingVersion: BigInt(startingVersion),
   })) {
-    yield event;
+    yield streamOutput;
 
-    if (event.type === "data") {
-      const lastSuccessTx = event.transactions[event.transactions.length - 1];
+    if (streamOutput.type === "data") {
+      for (const transaction of streamOutput.transactions) {
+        extractAndSaveEvents(db, transaction);
+      }
+
+      const lastSuccessTx =
+        streamOutput.transactions[streamOutput.transactions.length - 1];
 
       db.prepare(
         `
@@ -60,37 +80,37 @@ DO UPDATE SET
   }
 }
 
-const db = new Database("indexer.db");
-
-db.pragma("journal_mode = WAL");
-
 const run = async () => {
-  for await (const event of streamAndPersistTransactions({
+  const db = new Database("indexer.db");
+  db.pragma("journal_mode = WAL");
+
+  for await (const streamOutput of streamAndPersistTransactions({
     db,
     url: process.env.INDEXER_GRPC_URL!,
     apiKey: process.env.APTOS_API_KEY!,
   })) {
-    switch (event.type) {
+    switch (streamOutput.type) {
       case "data": {
-        const startVersion = event.transactions[0].version!;
+        const startVersion = streamOutput.transactions[0].version!;
         const endVersion =
-          event.transactions[event.transactions.length - 1].version!;
+          streamOutput.transactions[streamOutput.transactions.length - 1]
+            .version!;
 
         console.debug(
-          `Got ${event.transactions.length} transaction(s) from version ${startVersion} to ${endVersion}.`
+          `Got ${streamOutput.transactions.length} transaction(s) from version ${startVersion} to ${endVersion}.`
         );
         break;
       }
       case "error": {
-        console.error(event.error);
+        console.error(streamOutput.error);
         break;
       }
       case "metadata": {
-        console.log(event.metadata);
+        console.log(streamOutput.metadata);
         break;
       }
       case "status": {
-        console.log(event.status);
+        console.log(streamOutput.status);
         break;
       }
     }
