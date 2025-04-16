@@ -8,6 +8,10 @@ This is a custom indexer implemented in TypeScript and using sqlite. Compare wit
 
 ## Usage
 
+Make a copy of `.env.example` and rename it to `.env`, then fill in the values.
+
+Run the following command to start the indexer:
+
 ```sh
 npm i && npm run indexing
 ```
