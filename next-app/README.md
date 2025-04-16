@@ -2,9 +2,13 @@
 
 This is a [Next.js](https://nextjs.org/) project bootstrapped with [`create-next-app`](https://github.com/vercel/next.js/tree/canary/packages/create-next-app).
 
+## Reading data from indexer DB
+
+Currently the frontend is set to read data from neon postgres which is the DB used by the Rust indexer. If you use the TypeScript indexer, that will write to a local sqlite DB and you can update the frontend code accordingly.
+
 ## Local development
 
-This template uses `@neondatabase/serverless` to connect to a Postgres database. When testing locally, you can connect to a dev branch of neon DB.
+This template uses `@neondatabase/serverless` to connect to a Postgres database. When testing locally, you can connect to a dev branch of neon DB because neon DB doesn't support local development.
 
 ## Create a read only user in DB
 

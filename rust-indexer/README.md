@@ -1,6 +1,6 @@
 # Overview
 
-This indexer is created from indexer-sdk, see a more detailed readme in [example indexer repo](https://github.com/aptos-labs/aptos-indexer-processor-example).
+This is a custom indexer built with Aptos indexer-sdk in Rust, see a more detailed readme in [example indexer repo](https://github.com/aptos-labs/aptos-indexer-processor-example).
 
 We use the term indexer and processor interchangeably.
 
