@@ -16,7 +16,7 @@ for file in "./sources"/*; do
         mkdir -p $NEXT_APP_ABI_DIR
         echo $ABI >$NEXT_APP_ABI_DIR/${module_name}_abi.ts
 
-        NODE_SCRIPTS_ABI_DIR="../../../node-scripts/src/lib/abi"
+        NODE_SCRIPTS_ABI_DIR="../../../node-script/src/lib/abi"
         mkdir -p $NODE_SCRIPTS_ABI_DIR
         echo $ABI >$NODE_SCRIPTS_ABI_DIR/${module_name}_abi.ts
 
