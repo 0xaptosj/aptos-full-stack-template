@@ -59,11 +59,11 @@ export function UpdateMessage({ messageObjAddr }: UpdateMessageProps) {
         type_arguments: [],
         arguments: [messageObjAddr, data.stringContent],
       })
-      .then((committedTransaction) => {
-        return getAptosClient().waitForTransaction({
+      .then((committedTransaction) =>
+        getAptosClient().waitForTransaction({
           transactionHash: committedTransaction.hash,
-        });
-      })
+        })
+      )
       .then((executedTransaction) => {
         toast({
           title: "Success",

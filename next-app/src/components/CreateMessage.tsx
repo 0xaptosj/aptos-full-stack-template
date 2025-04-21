@@ -1,10 +1,7 @@
 "use client";
 
 import { useWalletClient } from "@thalalabs/surf/hooks";
-import {
-  PendingTransactionResponse,
-  useWallet,
-} from "@aptos-labs/wallet-adapter-react";
+import { useWallet } from "@aptos-labs/wallet-adapter-react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
@@ -32,7 +29,7 @@ import { Input } from "@/components/ui/input";
 import { TransactionOnExplorer } from "@/components/ExplorerLink";
 import { ABI } from "@/lib/abi/message_board_abi";
 import { useQueryClient } from "@tanstack/react-query";
-import { sponsorTxOnServer } from "@/app/actions";
+import { sponsorAndSubmitTxOnServer } from "@/app/actions";
 
 const FormSchema = z.object({
   stringContent: z.string(),
@@ -81,15 +78,12 @@ export function CreateMessage() {
     //       type_arguments: [],
     //       arguments: [data.stringContent],
     //     })
-    await sponsorTxOnServer({
+    await sponsorAndSubmitTxOnServer({
       transactionBytes: Array.from(transaction.bcsToBytes()),
-      senderAuthenticatorBytes: Array.from(senderAuthenticator.authenticator.bcsToBytes()),
+      senderAuthenticatorBytes: Array.from(
+        senderAuthenticator.authenticator.bcsToBytes()
+      ),
     })
-      .then((tx: PendingTransactionResponse) => {
-        return getAptosClient().waitForTransaction({
-          transactionHash: tx.hash,
-        });
-      })
       .then((executedTransaction) => {
         toast({
           title: "Success, tx is sponsored haha",

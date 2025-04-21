@@ -12,6 +12,7 @@ import {
   AccountAuthenticator,
   Deserializer,
   Ed25519PrivateKey,
+  PendingTransactionResponse,
   PrivateKey,
   PrivateKeyVariants,
   SimpleTransaction,
@@ -53,14 +54,14 @@ export const getUserStatsOnServer = async ({
   return getUserStats({ page, limit, sortedBy, order });
 };
 
-type SponsorTxOnServerProps = {
+type sponsorAndSubmitTxOnServerProps = {
   transactionBytes: number[]; // representing Unit8Array
   senderAuthenticatorBytes: number[]; // representing Unit8Array
 };
-export const sponsorTxOnServer = async ({
+export const sponsorAndSubmitTxOnServer = async ({
   transactionBytes,
   senderAuthenticatorBytes,
-}: SponsorTxOnServerProps) => {
+}: sponsorAndSubmitTxOnServerProps) => {
   const transaction = SimpleTransaction.deserialize(
     new Deserializer(new Uint8Array(transactionBytes))
   );
@@ -69,7 +70,12 @@ export const sponsorTxOnServer = async ({
   );
 
   const sponsor = Account.fromPrivateKey({
-    privateKey: new Ed25519PrivateKey(PrivateKey.formatPrivateKey(process.env.TX_SPONSOR_PRIVATE_KEY!, PrivateKeyVariants.Ed25519)),
+    privateKey: new Ed25519PrivateKey(
+      PrivateKey.formatPrivateKey(
+        process.env.TX_SPONSOR_PRIVATE_KEY!,
+        PrivateKeyVariants.Ed25519
+      )
+    ),
   });
 
   const feePayerAuthenticator = getAptosClient().transaction.signAsFeePayer({
@@ -77,9 +83,15 @@ export const sponsorTxOnServer = async ({
     transaction,
   });
 
-  return await getAptosClient().transaction.submit.simple({
-    transaction,
-    senderAuthenticator,
-    feePayerAuthenticator,
-  });
+  return await getAptosClient(process.env.APTOS_API_KEY)
+    .transaction.submit.simple({
+      transaction,
+      senderAuthenticator,
+      feePayerAuthenticator,
+    })
+    .then((tx: PendingTransactionResponse) =>
+      getAptosClient().waitForTransaction({
+        transactionHash: tx.hash,
+      })
+    );
 };

@@ -5,14 +5,15 @@ import { ABI } from "@/lib/abi/message_board_abi";
 
 export const NETWORK = process.env.NEXT_PUBLIC_NETWORK! as Network;
 
-const APTOS_CLIENT = new Aptos(
-  new AptosConfig({
-    network: NETWORK,
-  })
-);
+export const getAptosClient = (api_key?: string) =>
+  new Aptos(
+    new AptosConfig({
+      network: NETWORK,
+      clientConfig: {
+        API_KEY: api_key,
+      },
+    })
+  );
 
-const SURF_CLIENT = createSurfClient(APTOS_CLIENT).useABI(ABI);
-
-export const getAptosClient = () => APTOS_CLIENT;
-
-export const getSurfClient = () => SURF_CLIENT;
+export const getSurfClient = () =>
+  createSurfClient(getAptosClient()).useABI(ABI);
