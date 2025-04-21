@@ -83,7 +83,7 @@ export const sponsorAndSubmitTxOnServer = async ({
     transaction,
   });
 
-  return await getAptosClient(process.env.APTOS_API_KEY)
+  return await getAptosClient()
     .transaction.submit.simple({
       transaction,
       senderAuthenticator,
