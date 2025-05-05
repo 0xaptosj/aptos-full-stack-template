@@ -6,6 +6,8 @@ import {
   AptosConfig,
   Ed25519PrivateKey,
   Network,
+  PrivateKey,
+  PrivateKeyVariants,
 } from "@aptos-labs/ts-sdk";
 import { createSurfClient } from "@thalalabs/surf";
 import { Client } from "pg";
@@ -38,7 +40,9 @@ export const getAccount = () => {
   }
 
   return Account.fromPrivateKey({
-    privateKey: new Ed25519PrivateKey(env.PRIVATE_KEY!),
+    privateKey: new Ed25519PrivateKey(
+      PrivateKey.formatPrivateKey(env.PRIVATE_KEY!, PrivateKeyVariants.Ed25519)
+    ),
   });
 };
 
