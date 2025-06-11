@@ -19,7 +19,7 @@ const fontSans = FontSans({
 
 export const metadata: Metadata = {
   title: "Aptos Full Stack Demo",
-  description: "An demo of a full stack app on Aptos",
+  description: "A demo of a full stack app on Aptos",
 };
 
 const RootLayout = ({ children }: PropsWithChildren) => {
