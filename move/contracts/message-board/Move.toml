@@ -11,7 +11,6 @@ message_board_addr = "0x999"
 
 [dependencies]
 AptosFramework = { git = "https://github.com/aptos-labs/aptos-framework.git", rev = "mainnet", subdir = "aptos-framework" }
-AptosToken = { git = "https://github.com/aptos-labs/aptos-framework.git", rev = "mainnet", subdir = "aptos-token" }
 AptosTokenObjects = { git = "https://github.com/aptos-labs/aptos-framework.git", rev = "mainnet", subdir = "aptos-token-objects" }
 
 [dev-dependencies]
