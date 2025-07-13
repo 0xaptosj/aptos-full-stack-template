@@ -117,3 +117,4 @@ module message_board_addr::message_board {
         object::address_to_object(event.message_obj_addr)
     }
 }
+

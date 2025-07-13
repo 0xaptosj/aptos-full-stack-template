@@ -3,11 +3,11 @@
   "version": "0.0.1",
   "private": true,
   "scripts": {
-    "create-message": "ts-node src/script/create_message.ts",
-    "update-message": "ts-node src/script/update_message.ts",
-    "get-message": "ts-node src/script/get_message.ts",
-    "get-last-message-from-db": "ts-node src/script/get_last_message_from_db.ts",
-    "yolo": "ts-node src/script/yolo.ts"
+    "create-message": "npx tsx src/script/create_message.ts",
+    "update-message": "npx tsx src/script/update_message.ts",
+    "get-message": "npx tsx src/script/get_message.ts",
+    "get-last-message-from-db": "npx tsx src/script/get_last_message_from_db.ts",
+    "yolo": "npx tsx src/script/yolo.ts"
   },
   "dependencies": {
     "@aptos-labs/ts-sdk": "^1.39.0",
@@ -17,7 +17,7 @@
   },
   "devDependencies": {
     "@types/pg": "^8.11.8",
-    "ts-node": "^10.9.2",
+    "tsx": "^4.20.3",
     "typescript": "^5.3.3"
   }
 }

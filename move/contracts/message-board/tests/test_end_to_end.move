@@ -73,3 +73,4 @@ module message_board_addr::test_end_to_end {
         message_board::update_message(sender2, message_obj, string::utf8(b"hello move"));
     }
 }
+
